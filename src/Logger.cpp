@@ -1,42 +1,39 @@
 #include "pch.hpp"
+
 #include "Logger.hpp"
 
 namespace DarkDescent
 {
-	constexpr size_t formatBufferSize = 1024;
+	const char* Logger::prefixes[Logger::severities] = {
+		"[INFO] ",
+		"[WARNING] ",
+		"[ERROR] ",
+		"[DEBUG] ",
+		"[EXCEPTION] " };
 
-#define BLACK			0
-#define BLUE			1
-#define GREEN			2
-#define CYAN			3
-#define RED				4
-#define MAGENTA			5
-#define BROWN			6
-#define LIGHTGRAY		7
-#define DARKGRAY		8
-#define LIGHTBLUE		9
-#define LIGHTGREEN		10
-#define LIGHTCYAN		11
-#define LIGHTRED		12
-#define LIGHTMAGENTA	13
-#define YELLOW			14
-#define WHITE			15
+#ifdef _WIN32
+	Logger::Color Logger::resetColor = Logger::createColor(15, 0);
 
-
-#ifndef _WIN32 
-	const char* Logger::DEFAULT_COLOR = "\033[39m\033[49m";
-	const char* Logger::INFO_COLOR = "\033[34m";
-	const char* Logger::WARN_COLOR = "\033[33m";
-	const char* Logger::ERROR_COLOR = "\033[31m";
-	const char* Logger::DEBUG_COLOR = "\033[30m";
+	Logger::Color Logger::severityColors[Logger::severities] = {
+		Logger::createColor(9),
+		Logger::createColor(14),
+		Logger::createColor(4),
+		Logger::createColor(1),
+		Logger::createColor(4),
+	};
 #else
-	WORD Logger::DEFAULT_COLOR = Logger::createColor(15, 0);
-	WORD Logger::INFO_COLOR = Logger::createColor(9);
-	WORD Logger::WARN_COLOR = Logger::createColor(14);
-	WORD Logger::ERROR_COLOR = Logger::createColor(4);
-	WORD Logger::DEBUG_COLOR = Logger::createColor(1);
+	Logger::Color Logger::resetColor = "\033[39m\033[49m";
+
+	Logger::Color Logger::levelColors[Logger::severities] = {
+		"\033[34m",
+		"\033[33m",
+		"\033[31m",
+		"\033[30m",
+		"\033[31m",
+	};
 #endif
 
+	std::filesystem::path Logger::logDir_;
 	std::unordered_map<std::string, Logger*> Logger::loggers_ = std::unordered_map<std::string, Logger*>();
 	std::queue<Logger::LogInfo> Logger::logQueue_;
 	std::mutex Logger::mutex_;
@@ -44,7 +41,7 @@ namespace DarkDescent
 	bool Logger::shouldTerminate_ = false;
 	std::optional<std::thread> Logger::logHandlerThread_;
 
-	std::string& Logger::date()
+	const std::string& Logger::getCurrentDate()
 	{
 		static std::optional<std::string> dateString;
 		if (!dateString.has_value())
@@ -59,22 +56,76 @@ namespace DarkDescent
 		return dateString.value();
 	}
 
-	Logger& Logger::get(const char* path, const char* name)
+	bool Logger::initialize(std::filesystem::path&& path)
 	{
-		std::filesystem::path logPath;
+		return initialize(path.string().c_str());
+	}
 
-		if (path == nullptr)
-			logPath = std::filesystem::current_path() / "logs";
+	/**
+	 * TODO:
+	 * 	- let the log method calculate its time instead of when it arrives at the background thread
+	 */
+	bool Logger::initialize(const char* path)
+	{
+		if (!logHandlerThread_.has_value())
+		{
+			if (path != nullptr)
+				logDir_ = path;
+			else
+				logDir_ = std::filesystem::current_path() / "logs";
 
-		if (!std::filesystem::exists(logPath))
-			std::filesystem::create_directory(logPath);
+			if (!std::filesystem::exists(logDir_))
+				std::filesystem::create_directory(logDir_);
+
+			logHandlerThread_.emplace(std::thread([ & ]()
+			{
+				time_t rawtime;
+			tm timeinfo;
+			char timeBuf[10] = {};
+
+			while (!shouldTerminate_)
+			{
+				std::unique_lock<std::mutex> lock(mutex_);
+				cv_.wait(lock);
+				lock.unlock();
+
+				while (logQueue_.size() > 0)
+				{
+					Logger::LogInfo& info = logQueue_.front();
+
+					time(&rawtime);
+					localtime_s(&timeinfo, &rawtime);
+					strftime(timeBuf, 10, "%T", &timeinfo);
+
+					info.logger->logFile_ << "[" << timeBuf << "] ";
+
+					info.logger->logFile_ << info.data;
+					info.logger->logFile_.flush();
+
+					lock.lock();
+					logQueue_.pop();
+					lock.unlock();
+				}
+			}
+
+			}));
+
+			return true;
+		}
+		return false;
+	}
+
+	const Logger& Logger::get(const char* name)
+	{
+		if (!logHandlerThread_.has_value())
+			throw std::runtime_error("Cannot get logger before a call to Logger::initialize(...)!");
 
 		std::string fileName;
 
 		if (name == nullptr)
-			fileName = Logger::date();
+			fileName = Logger::getCurrentDate();
 		else
-			fileName = std::string(name) + "-" + Logger::date();
+			fileName = std::string(name) + "-" + Logger::getCurrentDate();
 
 		if (!loggers_.contains(fileName))
 		{
@@ -89,7 +140,7 @@ namespace DarkDescent
 				std::string versionString = version == 0 ? "" : (std::string("-") + std::to_string(version));
 				std::string genName = fileName + versionString + ".log";
 
-				logFilePath = logPath / genName;
+				logFilePath = logDir_ / genName;
 
 				exists = std::filesystem::exists(logFilePath);
 
@@ -121,47 +172,12 @@ namespace DarkDescent
 		shouldTerminate_ = false;
 	}
 
-	Logger::Logger(const char* path) : logFile_(path)
+	Logger::Logger(const char* path):
+		logFile_(path)
 	{
 #ifdef _WIN32
 		hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
-		if (!logHandlerThread_.has_value())
-			logHandlerThread_.emplace(std::thread([&]()
-		{
-			time_t rawtime;
-			tm timeinfo;
-			char timeBuf[10] = {};
-
-			while (!shouldTerminate_)
-			{
-				std::unique_lock<std::mutex> lock(mutex_);
-				cv_.wait(lock);
-				lock.unlock();
-
-				while (logQueue_.size() > 0)
-				{
-					Logger::LogInfo& info = logQueue_.front();
-
-					if (info.isNewLine)
-					{
-						time(&rawtime);
-						localtime_s(&timeinfo, &rawtime);
-						strftime(timeBuf, 10, "%T", &timeinfo);
-
-						info.logger->logFile_ << "[" << timeBuf << "] ";
-					}
-
-					info.logger->logFile_ << info.data;
-					info.logger->logFile_.flush();
-					lock.lock();
-					logQueue_.pop();
-					lock.unlock();
-				}
-			}
-
-			debug("Log thread terminated!");
-		}));
 	}
 
 	Logger::~Logger()
@@ -170,74 +186,21 @@ namespace DarkDescent
 			logFile_.close();
 	}
 
-	void Logger::logRest(char* str)
+	void Logger::print(LogInfo& info) const
 	{
-		printf("%s", str);
-		forward(str);
+
 	}
 
-	void Logger::logRest(const char* str)
+	std::string Logger::getPrefix(LogSeverity level) const
 	{
-		printf("%s", str);
-		forward(str);
+		const unsigned long long i = static_cast<unsigned long long>(level);
+		return prefixes[i];
 	}
 
-	void Logger::logRest(std::string& str)
-	{
-		printf("%s", str.c_str());
-		forward(str.c_str());
-	}
-
-	void Logger::log(const char* str)
-	{
-		log(std::string(str));
-	}
-
-	void Logger::log(std::string& str)
-	{
-		char formatBuffer[formatBufferSize];
-
-		// prevent buffer overflow
-		if (str.size() > formatBufferSize)
-		{
-			str.resize(formatBufferSize - 2);
-			str[formatBufferSize - 5] = '.';
-			str[formatBufferSize - 4] = '.';
-			str[formatBufferSize - 3] = '.';
-			str[formatBufferSize - 2] = '\0';
-		}
-
-		sprintf_s<formatBufferSize>(formatBuffer, "%s\n", str.c_str());
-		printf("%s", formatBuffer);
-		forward(formatBuffer);
-	}
-
-	void Logger::log(std::string&& str)
-	{
-		log(str);
-	}
-
-	void Logger::forward(const char* str, bool newLine)
+	void Logger::forward(Logger::LogSeverity sevirity, std::string&& data) const
 	{
 		std::unique_lock<std::mutex> lock(mutex_);
-		Logger::LogInfo info = {
-			.isNewLine = newLine,
-			.logger = this,
-			.data = str
-		};
-		logQueue_.push(info);
-		cv_.notify_one();
-	}
-
-	void Logger::forward(std::string& str, bool newLine)
-	{
-		std::unique_lock<std::mutex> lock(mutex_);
-		Logger::LogInfo info = {
-			.isNewLine = newLine,
-			.logger = this,
-			.data = str
-		};
-		logQueue_.push(info);
+		logQueue_.emplace(std::move(LogInfo(this, sevirity, std::forward<std::string>(data))));
 		cv_.notify_one();
 	}
 }

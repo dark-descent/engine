@@ -1,42 +1,31 @@
 ﻿#include "pch.hpp"
 #include "Logger.hpp"
 
+struct Test
+{
+	int i;
+
+	Test(int i): i(i) { }
+
+	std::string log() const
+	{
+		return std::format("struct Test::i = {}", i);
+	}
+};
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-	DarkDescent::Logger& logger = DarkDescent::Logger::get();
+	using namespace DarkDescent;
 
-	SDL_SetMainReady();
+	Logger::initialize(std::filesystem::current_path() / ".." / ".." / ".." / "logs");
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-	{
-		logger.error("Error initializing SDL: ", SDL_GetError());
-		return 1;
-	}
+	const Logger& logger = Logger::get();
 
-	SDL_Window* win = SDL_CreateWindow("GAME", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, 0);
+	Test testObj(1);
 
-	logger.info("Hello, World!");
+	logger.log(Logger::LogSeverity::DEBUG, 1, " - ", true, " - ", testObj);
 
-	bool isRunning = true;
-
-	SDL_Event event;
-
-	while (isRunning)
-	{
-		while (SDL_PollEvent(&event))
-		{
-			switch (event.type)
-			{
-				case SDL_QUIT:
-					isRunning = false;
-					break;
-			}
-		}
-	}
-
-	SDL_Quit();
-
-	DarkDescent::Logger::terminate();
+	Logger::terminate();
 
 	return 0;
 }

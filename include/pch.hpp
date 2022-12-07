@@ -50,12 +50,13 @@
 #include <queue>
 #include <semaphore>
 #include <unordered_map>
+#include <string_view>
 // -----------  STANDARD INCLUDES  ----------- //
 
 
 
 // -------------  SDL & OpenGL -------------- //
-#include "SDL.h"
+#include <SDL.h>
 // -------------  SDL & OpenGL -------------- //
 
 

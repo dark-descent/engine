@@ -4,30 +4,211 @@
 
 namespace DarkDescent
 {
-	enum class LogSeverity
+	template <class T>
+	concept IsStringLike = std::is_convertible_v<T, std::string_view>;
+
+	template <typename T>
+	concept IsLoggable = requires(T loggable)
 	{
-		DEFAULT = 0,
-		INFO = 1,
-		WARNING = 2,
-		ERROR = 3,
-		DEBUG = 4
+		{
+			loggable.log()
+		} -> IsStringLike;
 	};
 
 	class Logger
 	{
-	private:
-		static inline constexpr WORD createColor(int foreground, int background = 0)
+#ifdef _WIN32
+		using Color = WORD;
+#else
+		using Color = const char*;
+#endif
+
+	public:
+		enum class LogSeverity
 		{
-			return ((background & 0x0F) << 4) + (foreground & 0x0F);
-		}
+			INFO,
+			WARNING,
+			ERROR,
+			DEBUG,
+			EXCEPTION,
+		};
+
+	private:
+		constexpr static unsigned long long severities = static_cast<unsigned long long>(LogSeverity::EXCEPTION) + 1;
 
 		struct LogInfo
 		{
-			bool isNewLine = false;
-			Logger* logger;
+			const Logger* logger;
+			std::thread::id threadID;
+			LogSeverity sevirity;
 			std::string data;
+
+			LogInfo(const Logger* logger, LogSeverity sevirity, std::string&& data):
+				logger(logger),
+				threadID(std::this_thread::get_id()),
+				sevirity(sevirity),
+				data(data)
+			{ }
 		};
 
+		static const std::string& getCurrentDate();
+
+#ifdef _WIN32
+		static inline constexpr Color createColor(int foreground, int background = 0)
+		{
+			return ((background & 0x0F) << 4) + (foreground & 0x0F);
+		}
+#endif
+
+	public:
+
+		/**
+		 * @brief Initializes the Logger system with an optional path to the log folder.
+		 *
+		 * @param path The path to the log folder where all the log files will be stored.
+		 * @return true when the Logger succesfully initializes
+		 * @return false when the Logger already is initialized
+		 */
+
+		static bool initialize(std::filesystem::path&& path);
+		static bool initialize(const char* path = nullptr);
+		static const Logger& get(const char* name = nullptr);
+		static void terminate();
+
+	private:
+		Logger(const char* path);
+		Logger(const Logger&) = delete;
+		Logger(Logger&&) = delete;
+		~Logger();
+
+		void print(LogInfo& info) const;
+
+		inline std::string convertToString(const char* str) const { return std::string(str); }
+		inline std::string convertToString(const std::string& str) const noexcept { return str; }
+		inline std::string convertToString(std::string&& str) const noexcept { return str; }
+		inline std::string convertToString(bool boolValue) const noexcept { return boolValue ? "true" : "false"; }
+
+		template <typename T, typename... Rest>
+			requires IsLoggable<T>
+		std::string convertToString(T& loggable) const
+		{
+			return std::string(loggable.log());
+		}
+
+		template <typename T, typename... Rest>
+			requires IsLoggable<T>
+		std::string convertToString(T& loggable, Rest... rest) const
+		{
+			return std::string(loggable.log()) + convertToString(rest...);
+		}
+
+		template <typename... Rest>
+		std::string convertToString(const char* str, Rest... rest) const { return std::string(str) + convertToString(rest...); }
+
+		template <typename... Rest>
+		std::string convertToString(const std::string& str, Rest... rest) const { return str + convertToString(rest...); }
+
+		template <typename... Rest>
+		std::string convertToString(std::string&& str, Rest... rest) const { return str + convertToString(rest...); }
+
+		template <typename T>
+		std::string convertToString(T arg) const
+		{
+			return std::to_string(arg);
+		}
+
+		template <typename T, typename... Rest>
+		std::string convertToString(T arg, Rest... rest) const
+		{
+			return convertToString(arg) + convertToString(rest...);
+		}
+
+		std::string getPrefix(LogSeverity severity) const;
+
+		void forward(LogSeverity sevirity, std::string&& data) const;
+
+	public:
+		template <typename T>
+		void log(LogSeverity severity, T arg) const
+		{
+			std::string data = getPrefix(severity) + convertToString(arg);
+			forward(std::move(data));
+		}
+
+		template <typename T, typename... Rest>
+		void log(LogSeverity severity, T arg, Rest... rest) const
+		{
+			std::string data = getPrefix(severity) + convertToString(arg, rest...);
+			forward(severity, std::move(data));
+		}
+
+		template <typename T>
+		void debug(T arg) const
+		{
+			log(LogSeverity::DEBUG, arg);
+		}
+
+		template <typename T, typename... Rest>
+		void debug(T arg, Rest... rest) const
+		{
+			log(LogSeverity::DEBUG, arg, rest...);
+		}
+
+
+		template <typename T>
+		void info(T arg) const
+		{
+			log(LogSeverity::INFO, arg);
+		}
+
+		template <typename T, typename... Rest>
+		void info(T arg, Rest... rest) const
+		{
+			log(LogSeverity::INFO, arg, rest...);
+		}
+
+
+		template <typename T>
+		void warn(T arg) const
+		{
+			log(LogSeverity::WARN, arg);
+		}
+
+		template <typename T, typename... Rest>
+		void warn(T arg, Rest... rest) const
+		{
+			log(LogSeverity::WARN, arg, rest...);
+		}
+
+
+		template <typename T>
+		void error(T arg) const
+		{
+			log(LogSeverity::ERROR, arg);
+		}
+
+		template <typename T, typename... Rest>
+		void error(T arg, Rest... rest) const
+		{
+			log(LogSeverity::ERROR, arg, rest...);
+		}
+
+
+
+		template <typename T>
+		void exception(T arg) const
+		{
+			log(LogSeverity::EXCEPTION, arg);
+		}
+
+		template <typename T, typename... Rest>
+		void exception(T arg, Rest... rest) const
+		{
+			log(LogSeverity::EXCEPTION, arg, rest...);
+		}
+
+	private:
+		static std::filesystem::path logDir_;
 		static std::optional<std::thread> logHandlerThread_;
 		static std::mutex mutex_;
 		static std::condition_variable cv_;
@@ -37,253 +218,15 @@ namespace DarkDescent
 
 		static bool shouldTerminate_;
 
-		static std::string& date();
-
-	public:
-		static Logger& get(const char* path = nullptr, const char* name = nullptr);
-
-		static void terminate();
-
-	private:
-#ifndef _WIN32 
-		static const char* DEFAULT_COLOR;
-		static const char* INFO_COLOR;
-		static const char* WARN_COLOR;
-		static const char* ERROR_COLOR;
-		static const char* DEBUG_COLOR;
-#else
-		static WORD DEFAULT_COLOR;
-		static WORD INFO_COLOR;
-		static WORD WARN_COLOR;
-		static WORD ERROR_COLOR;
-		static WORD DEBUG_COLOR;
-#endif
+		static const char* prefixes[severities];
+		static Color severityColors[severities];
+		static Color resetColor;
 
 		std::string path_;
-		std::ofstream logFile_;
+		mutable std::ofstream logFile_;
 
 #ifdef _WIN32
 		HANDLE hConsole;
 #endif
-
-		void forward(const char* str, bool newLine = false);
-		void forward(std::string& str, bool newLine = false);
-
-	public:
-		Logger(const char* path);
-		~Logger();
-
-	private:
-		void logRest(char* str);
-		void logRest(const char* str);
-		void logRest(std::string& str);
-
-		template<typename T>
-		void logRest(T& other)
-		{
-			std::string s = std::to_string(other);
-			logRest(s);
-		}
-
-		template<typename T, typename... Rest>
-		void logRest(T str, Rest... rest)
-		{
-			logRest(str);
-			logRest(rest...);
-		}
-
-		void log(const char* str);
-		void log(std::string& str);
-		void log(std::string&& str);
-		// void log(std::string str);
-
-		template<typename T>
-		void log(T str)
-		{
-			std::string s = std::to_string(str);
-			log(s);
-		}
-
-		template<typename T, typename... Ts>
-		void log(T str, Ts... rest)
-		{
-			printf("%s", str);
-			forward(str);
-			log(rest...);
-		}
-
-	public:
-		template<typename T>
-		void info(T str)
-		{
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, INFO_COLOR);
-			printf("[INFO] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-#endif
-			forward("[INFO] ", true);
-			log(str);
-		}
-
-		template<typename T>
-		void warn(T str)
-		{
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, WARN_COLOR);
-			printf("[WARN] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-#endif
-			forward("[WARN] ", true);
-			log(str);
-		}
-
-		template<typename T>
-		void error(T str)
-		{
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, ERROR_COLOR);
-			printf("[ERROR] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-#endif
-			forward("[ERROR] ", true);
-			log(str);
-		}
-
-		template<typename T>
-		void debug([[maybe_unused]] T str)
-		{
-#ifdef _DEBUG
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, DEBUG_COLOR);
-			printf("[DEBUG] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-#endif
-			forward("[DEBUG] ", true);
-			log(str);
-#endif
-		}
-
-		template<typename T, typename... Ts>
-		void info(T str, Ts... rest)
-		{
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, INFO_COLOR);
-			printf("[INFO] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-			printf(str);
-#endif
-			forward("[INFO] ", true);
-			forward(str);
-			logRest(rest...);
-			printf("\n");
-			forward("\n");
-		}
-
-		template<typename T, typename... Ts>
-		void warn(T str, Ts... rest)
-		{
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, WARN_COLOR);
-			printf("[WARN] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-			printf(str);
-#endif
-			forward("[WARN] ", true);
-			forward(str);
-			logRest(rest...);
-			printf("\n");
-			forward("\n");
-		}
-
-		template<typename T, typename... Ts>
-		void error(T str, Ts... rest)
-		{
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, ERROR_COLOR);
-			printf("[ERROR] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-			printf(str);
-#endif
-			forward("[ERROR] ", true);
-			forward(str);
-			logRest(rest...);
-			printf("\n");
-			forward("\n");
-		}
-
-		template<typename T, typename... Ts>
-		void debug(T str, Ts... rest)
-		{
-#ifdef _DEBUG
-#ifdef _WIN32
-			SetConsoleTextAttribute(hConsole, DEBUG_COLOR);
-			printf("[DEBUG] ");
-			SetConsoleTextAttribute(hConsole, DEFAULT_COLOR);
-			printf(str);
-#endif
-			forward("[DEBUG] ", true);
-			forward(str);
-			logRest(rest...);
-			printf("\n");
-			forward("\n");
-#endif
-		}
-
-		template<typename... Ts>
-		void log(LogSeverity type, Ts... rest)
-		{
-			switch (type)
-			{
-				case LogSeverity::INFO:
-					info(rest...);
-					break;
-				case LogSeverity::WARNING:
-					warn(rest...);
-					break;
-				case LogSeverity::ERROR:
-					error(rest...);
-					break;
-				case LogSeverity::DEBUG:
-					debug(rest...);
-					break;
-				case LogSeverity::DEFAULT:
-				default:
-#ifdef _DEBUG
-					debug(rest...);
-#else
-					info(rest...);
-#endif
-					break;
-
-			}
-		}
-
-		template<typename T>
-		void log(LogSeverity type, T str)
-		{
-			switch (type)
-			{
-				case LogSeverity::INFO:
-					info(str);
-					break;
-				case LogSeverity::WARNING:
-					warn(str);
-					break;
-				case LogSeverity::ERROR:
-					error(str);
-					break;
-				case LogSeverity::DEBUG:
-					debug(str);
-					break;
-				case LogSeverity::DEFAULT:
-				default:
-#ifdef _DEBUG
-					debug(str);
-#else
-					info(str);
-#endif
-					break;
-			}
-		}
 	};
 }
