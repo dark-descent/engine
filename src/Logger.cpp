@@ -97,10 +97,14 @@ namespace DarkDescent
 					localtime_s(&timeinfo, &rawtime);
 					strftime(timeBuf, 10, "%T", &timeinfo);
 
+					// info.sevirity
+
 					info.logger->logFile_ << "[" << timeBuf << "] ";
 
 					info.logger->logFile_ << info.data << '\n';
 					info.logger->logFile_.flush();
+
+					puts(info.data.c_str());
 
 					lock.lock();
 					logQueue_.pop();
