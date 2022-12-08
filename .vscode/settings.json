@@ -78,5 +78,11 @@
 		"xtr1common": "cpp",
 		"xtree": "cpp",
 		"xutility": "cpp"
+	},
+	"cmake.debugConfig": {
+		"args": [
+			"-test1",
+			"-test2"
+		]
 	}
 }
