@@ -99,7 +99,7 @@ namespace DarkDescent
 
 					info.logger->logFile_ << "[" << timeBuf << "] ";
 
-					info.logger->logFile_ << info.data;
+					info.logger->logFile_ << info.data << '\n';
 					info.logger->logFile_.flush();
 
 					lock.lock();
