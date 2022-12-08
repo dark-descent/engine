@@ -88,7 +88,7 @@ namespace DarkDescent
 		inline std::string convertToString(std::string&& str) const noexcept { return str; }
 		inline std::string convertToString(bool boolValue) const noexcept { return boolValue ? "true" : "false"; }
 
-		template <typename T, typename... Rest>
+		template <typename T>
 			requires IsLoggable<T>
 		std::string convertToString(T& loggable) const
 		{
@@ -132,7 +132,7 @@ namespace DarkDescent
 		void log(LogSeverity severity, T arg) const
 		{
 			std::string data = getPrefix(severity) + convertToString(arg);
-			forward(std::move(data));
+			forward(severity, std::move(data));
 		}
 
 		template <typename T, typename... Rest>
