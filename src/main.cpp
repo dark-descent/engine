@@ -1,5 +1,6 @@
 ﻿#include "pch.hpp"
 #include "Logger.hpp"
+#include "TraceException.hpp"
 
 struct Test
 {
@@ -13,17 +14,33 @@ struct Test
 	}
 };
 
+void testStackTrace()
+{
+	int i = 0;
+	int j = 1000;
+	throw DarkDescent::TraceException("hihi");
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
 	using namespace DarkDescent;
 
 	Logger::initialize(std::filesystem::current_path() / ".." / ".." / ".." / "logs");
-
+	
 	const Logger& logger = Logger::get();
 
-	Test testObj(1);
+	try
+	{
+		Test testObj(1);
 
-	logger.log(Logger::LogSeverity::DEBUG, 1, " - ", true, " - ", testObj);
+		logger.log(Logger::LogSeverity::DEBUG, 1, " - ", true, " - ", testObj);
+
+		testStackTrace();
+	}
+	catch (const TraceException& e)
+	{
+		logger.log(Logger::LogSeverity::EXCEPTION, e);
+	}
 
 	Logger::terminate();
 
