@@ -2,7 +2,9 @@
 
 project (dark-descent-engine)
 
-add_executable (dark-descent-engine WIN32 "src/main.cpp" "src/Logger.cpp")
+file(GLOB dark-descent-srcs CONFIGURE_DEPENDS "include/*.h" "src/*.cpp")
+
+add_executable (dark-descent-engine WIN32 ${dark-descent-srcs})
 
 set(SDL2_DIR "dependencies/win/SDL2/cmake")
 

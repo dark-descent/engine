@@ -1,20 +1,10 @@
 #pragma once
 
 #include "pch.hpp"
+#include "Concepts.hpp"
 
 namespace DarkDescent
 {
-	template <class T>
-	concept IsStringLike = std::is_convertible_v<T, std::string_view>;
-
-	template <typename T>
-	concept IsLoggable = requires(T loggable)
-	{
-		{
-			loggable.log()
-		} -> IsStringLike;
-	};
-
 	class Logger
 	{
 #ifdef _WIN32
