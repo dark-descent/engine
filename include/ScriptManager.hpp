@@ -2,6 +2,7 @@
 
 #include "SubSystem.hpp"
 #include "pch.hpp"
+#include "js/Env.hpp"
 
 namespace DarkDescent
 {
@@ -15,9 +16,11 @@ namespace DarkDescent
 		virtual void onTerminate() override;
 		virtual void run() override;
 
+		inline JS::Env& mainEnv() const { return *(envs_.at(0)); }
+
 	private:
 		std::unique_ptr<v8::Platform> platform_;
-		v8::Isolate::CreateParams create_params_;
-		v8::Isolate* mainIsolate_;
+		std::vector<JS::Env*> envs_;
+		
 	};
 }

@@ -35,6 +35,7 @@ namespace DarkDescent
 
 	Engine::Engine():
 		logger(Logger::get()),
+		mainThreadID(std::this_thread::get_id()),
 		scriptManager_(*this),
 		initializedSystems_()
 	{

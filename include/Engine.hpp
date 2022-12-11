@@ -34,6 +34,7 @@ namespace DarkDescent
 
 
 	public:
+		const std::thread::id mainThreadID;
 		const Logger& logger;
 	private:
 

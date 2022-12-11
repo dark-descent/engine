@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.hpp"
+#include "Concepts.hpp"
 #include "TraceException.hpp"
 
 namespace DarkDescent

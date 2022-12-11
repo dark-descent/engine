@@ -2,7 +2,7 @@
 
 project (dark-descent-engine)
 
-file(GLOB dark-descent-srcs CONFIGURE_DEPENDS "include/*.h" "src/*.cpp")
+file(GLOB dark-descent-srcs CONFIGURE_DEPENDS "include/*.h" "src/*.cpp" "include/js/*.h" "src/js/*.cpp")
 
 add_executable (dark-descent-engine WIN32 ${dark-descent-srcs})
 

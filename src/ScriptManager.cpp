@@ -1,5 +1,6 @@
 #include "ScriptManager.hpp"
 #include "Engine.hpp"
+#include "TraceException.hpp"
 
 namespace DarkDescent
 {
@@ -9,33 +10,35 @@ namespace DarkDescent
 		platform_ = platform::NewDefaultPlatform();
 		V8::InitializePlatform(platform_.get());
 		V8::Initialize();
-		create_params_.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
 
-		mainIsolate_ = Isolate::New(create_params_);
+		envs_.emplace_back(JS::Env::createNew());
+
+		mainEnv().run([ & ](JS::Env& env)
 		{
-			Isolate::Scope isolate_scope(mainIsolate_);
-			// Create a stack-allocated handle scope.
-			HandleScope handle_scope(mainIsolate_);
-			// Create a new context.
-			Local<Context> context = Context::New(mainIsolate_);
-			// Enter the context for compiling and running the hello world script.
-			Context::Scope context_scope(context);
-			// Create a string containing the JavaScript source code.
-			Local<String> source = String::NewFromUtf8(mainIsolate_, "'Hello' + ', World!'", NewStringType::kNormal).ToLocalChecked();
-			// Compile the source code.
-			Local<Script> script = Script::Compile(context, source).ToLocalChecked();
-			// Run the script to get the result.
-			Local<Value> result = script->Run(context).ToLocalChecked();
-			// Convert the result to an UTF8 string and print it.
-			String::Utf8Value utf8(mainIsolate_, result);
-			engine_.logger.info(std::string(*utf8));
-		}
+			char pBuf[256];
+			size_t len = sizeof(pBuf);
+
+			DWORD bytes = GetModuleFileNameA(NULL, pBuf, len);
+			if (bytes)
+			{
+				std::filesystem::path jsonPath = (std::filesystem::path(pBuf) / ".." / ".." / ".." / ".." / "test.json").lexically_normal();
+				if (!std::filesystem::exists(jsonPath))
+					throw TraceException("test.json not found!");
+
+				auto val = env.readJson(jsonPath).ToLocalChecked().As<v8::Object>();
+				auto helloVal = val->Get(env.context(), v8::String::NewFromUtf8(env.isolate(), "hello").ToLocalChecked()).ToLocalChecked().As<v8::String>();
+				v8::String::Utf8Value utfString(env.isolate(), helloVal);
+				engine_.logger.debug("Hello: ", std::string(*utfString));
+			}
+		});
 	}
 
 	void ScriptManager::onTerminate()
 	{
-		mainIsolate_->Dispose();
-		delete create_params_.array_buffer_allocator;
+		for (auto env : envs_)
+			delete env;
+		envs_.clear();
+
 		v8::V8::Dispose();
 		v8::V8::DisposePlatform();
 		platform_.release();
@@ -43,6 +46,6 @@ namespace DarkDescent
 
 	void ScriptManager::run()
 	{
-		
+
 	}
 }
