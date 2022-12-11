@@ -1,7 +1,7 @@
 ﻿#include "pch.hpp"
 #include "Logger.hpp"
 #include "TraceException.hpp"
-#include "Bin.hpp"
+#include "Engine.hpp"
 
 #if defined(_DEBUG) && defined(_WIN32)
 void setupWinConsole(bool bindStdIn = true, bool bindStdOut = true, bool bindStdErr = true);
@@ -16,117 +16,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 #endif
 
 	Logger::initialize(std::filesystem::current_path() / ".." / ".." / ".." / "logs");
+	Engine::initialize();
 
-	const Logger& logger = Logger::get();
-
-	try
-	{
-		std::filesystem::path p = std::filesystem::current_path() / ".." / ".." / ".." / "test.bin";
-
-		struct Test
-		{
-			double a;
-			int b;
-
-			std::string log() { return std::format("a: {}, b: {}", a, b); }
-		};
-
-		{
-			Bin::Writer writer(p.string());
-
-			std::vector<std::string> strings = {
-				std::string("Helloa A :D"),
-				std::string("Helloa B :D"),
-				std::string("Helloa C :D")
-			};
-
-			double second = 123.5;
-
-			Test testStruct = {
-				.a = 12345.123,
-				.b = 112233
-			};
-
-			writer.write(strings).write(second).write(testStruct);
-
-			auto start = std::chrono::high_resolution_clock::now();
-
-			writer.flush();
-
-			auto finish = std::chrono::high_resolution_clock::now();
-			auto delta = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
-			logger.info("Flushed in ", delta.count(), " microseconds");
-		}
-
-		std::vector<std::chrono::microseconds> durations;
-
-		for (size_t i = 0; i < 10; i++)
-		{
-			Bin::Reader reader(p.string());
-
-			std::vector<std::string> test;
-			double second = 0.0;
-			Test testStruct;
-
-			auto start = std::chrono::high_resolution_clock::now();
-
-			reader.read([ & ](Bin::Parser& parser)
-			{
-				parser.read(test);
-			parser.read(second);
-			parser.read(testStruct);
-			});
-
-			auto finish = std::chrono::high_resolution_clock::now();
-			auto delta = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
-			durations.push_back(delta);
-
-			logger.info("Parsed in ", delta.count(), " microseconds");
-
-
-			std::vector<size_t*> cacheTrasher;
-
-			for (size_t i = 0; i < 1024 * 64; i++)
-			{
-				cacheTrasher.emplace_back(new size_t(i));
-			}
-
-
-			for (size_t i = 0; i < 1024 * 64; i++)
-			{
-				delete cacheTrasher[i];
-			}
-
-			for (const auto& str : test)
-				logger.info(str.c_str());
-
-			logger.info("second: ", second);
-			logger.info("struct: ", testStruct);
-
-		}
-
-		long long total = 0;
-
-		for (size_t i = 0; i < 10; i++)
-		{
-			total += durations[i].count();
-		}
-
-		double average = static_cast<double>(total) / 10.0;
-
-		logger.info("Parsed 10 times in ", total, " microseconds");
-		logger.info("Average parse time ", average, " microseconds");
-	}
-	catch (const TraceException& e)
-	{
-		logger.log(Logger::LogSeverity::EXCEPTION, e);
-	}
+	Engine::terminate();
+	Logger::terminate();
 
 #if defined(_DEBUG) && defined(_WIN32)
 	getchar();
 #endif
-
-	Logger::terminate();
 
 	return 0;
 }

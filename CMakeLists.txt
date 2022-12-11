@@ -16,8 +16,6 @@ include_directories(dark-descent-engine ${SDL2_INCLUDE_DIRS} include)
 
 target_link_libraries(dark-descent-engine ${SDL2_LIBRARIES} opengl32)
 
-# add_definitions(-DSDL_MAIN_HANDLED)
-
 if(MSVC)
 	add_definitions(-DUNICODE -D_UNICODE)
 	add_compile_options(/W4 /WX)
@@ -29,13 +27,22 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET dark-descent-engine PROPERTY CXX_STANDARD 23)
 endif()
 
-
 if (WIN32)
+	include_directories(dark-descent-engine ${PROJECT_SOURCE_DIR}/dependencies/win/v8/include)
+
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    	set(V8_TYPE "debug")
+	else()
+		set(V8_TYPE "release")
+	endif()
+
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		link_directories(${PROJECT_SOURCE_DIR}/dependencies/win/v8/x64.${V8_TYPE}/obj)
 		set(SDL_DLL "${PROJECT_SOURCE_DIR}/dependencies/win/SDL2/lib/x64/SDL2.dll")
 	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+	link_directories(${PROJECT_SOURCE_DIR}/dependencies/win/v8/x86.${V8_TYPE}/obj)
 		set(SDL_DLL "${PROJECT_SOURCE_DIR}/dependencies/win/SDL2/lib/x86/SDL2.dll")
 	endif()
+	add_custom_command(TARGET dark-descent-engine POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SDL_DLL} $<TARGET_FILE_DIR:dark-descent-engine>)
 endif (WIN32)
 
-add_custom_command(TARGET dark-descent-engine POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SDL_DLL} $<TARGET_FILE_DIR:dark-descent-engine>)

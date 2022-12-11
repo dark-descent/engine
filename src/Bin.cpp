@@ -2,7 +2,6 @@
 
 namespace DarkDescent::Bin
 {
-
 	TypeInfo::TypeInfo(): TypeInfo(0, 0, nullptr) { }
 	TypeInfo::TypeInfo(size_t type, size_t size): TypeInfo(type, size, nullptr) { }
 	TypeInfo::TypeInfo(size_t type, size_t size, const char* ptr): type(type), size(size), ptr(ptr) { }

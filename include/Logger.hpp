@@ -161,13 +161,13 @@ namespace DarkDescent
 		template <typename T>
 		void warn(T arg) const
 		{
-			log(LogSeverity::WARN, arg);
+			log(LogSeverity::WARNING, arg);
 		}
 
 		template <typename T, typename... Rest>
 		void warn(T arg, Rest... rest) const
 		{
-			log(LogSeverity::WARN, arg, rest...);
+			log(LogSeverity::WARNING, arg, rest...);
 		}
 
 
