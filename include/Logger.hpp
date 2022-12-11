@@ -106,6 +106,7 @@ namespace DarkDescent
 		{
 			return std::to_string(arg);
 		}
+		
 
 		template <typename T, typename... Rest>
 		std::string convertToString(T arg, Rest... rest) const
@@ -118,6 +119,12 @@ namespace DarkDescent
 		void forward(LogSeverity sevirity, std::string&& data) const;
 
 	public:
+		void log(LogSeverity severity, const char* arg) const
+		{
+			std::string data = getPrefix(severity) + arg;
+			forward(severity, std::move(data));
+		}
+
 		template <typename T>
 		void log(LogSeverity severity, T arg) const
 		{

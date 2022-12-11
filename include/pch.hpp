@@ -56,9 +56,11 @@
 
 
 
-// -------------  SDL & OpenGL -------------- //
+// ------------  SDL, OpenGL, V8 ------------- //
 #include <SDL.h>
-// -------------  SDL & OpenGL -------------- //
+#include <v8.h>
+#include <libplatform/libplatform.h>
+// ------------  SDL, OpenGL, V8 ------------- //
 
 
 
