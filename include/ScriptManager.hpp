@@ -10,8 +10,8 @@ namespace DarkDescent
 		SUB_SYSTEM_CTORS(ScriptManager);
 
 	protected:
-		virtual void initialize() { }
-		virtual void terminate() { }
-		virtual void run() { }
+		virtual void onInitialize() override { }
+		virtual void onTerminate() override { }
+		virtual void run() override { }
 	};
 }

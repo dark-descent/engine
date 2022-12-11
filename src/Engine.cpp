@@ -34,12 +34,14 @@ namespace DarkDescent
 	}
 
 	Engine::Engine():
-		scriptManager_(*this)
+		logger(Logger::get()),
+		scriptManager_(*this),
+		initializedSystems_()
 	{
 		const Logger& logger = Logger::get();
 		logger.info("Initializing engine...");
 
-		scriptManager_.initialize();
+		initializeSubSystem(scriptManager_);
 
 		logger.info("Engine initialized!");
 	}
@@ -48,8 +50,13 @@ namespace DarkDescent
 	{
 		const Logger& logger = Logger::get();
 		logger.info("Terminating engine...");
-		
-		scriptManager_.terminate();
+
+		for(int i = static_cast<int>(initializedSystems_.size()) - 1; i >= 0; i--)
+		{
+			initializedSystems_[i]->terminate();
+		}
+
+		initializedSystems_.clear();
 
 		logger.info("Engine terminated!");
 	}

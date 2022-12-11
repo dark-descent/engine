@@ -14,16 +14,28 @@ namespace DarkDescent
 	class SubSystem
 	{
 	protected:
-		SubSystem(const Engine& engine): engine_(engine) { }
+		SubSystem(const Engine& engine);
 		SubSystem(const SubSystem&) = delete;
 		SubSystem(SubSystem&&) = delete;
-		virtual ~SubSystem() = 0 { }
+		virtual ~SubSystem() = 0;
 
 	protected:
-		virtual void initialize() { }
-		virtual void terminate() { }
-		virtual void run() { }
+		void initialize(const char* name);
+		void terminate();
 
+		virtual void onInitialize();
+		virtual void onTerminate();
+		virtual void run();
+
+	private:
+		std::string name_;
+	
+	protected:
 		const Engine& engine_;
+
+		friend class Engine;
 	};
+
+	template <typename T>
+	concept IsSubSystem = std::is_base_of<SubSystem, T>::value;
 }

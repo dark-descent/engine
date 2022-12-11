@@ -27,5 +27,4 @@ namespace DarkDescent
 
 	template<typename T>
 	concept IsBool = std::is_same_v<bool, T>;
-
 }
