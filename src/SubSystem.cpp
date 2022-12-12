@@ -22,5 +22,4 @@ namespace DarkDescent
 
 	void SubSystem::onInitialize() { }
 	void SubSystem::onTerminate() { }
-	void SubSystem::run() { }
 }
