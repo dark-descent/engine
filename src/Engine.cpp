@@ -59,12 +59,9 @@ namespace DarkDescent
 				return JS::getFromObject(env, obj, key);
 			};
 
+			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
 
-			auto formatTest = JS::Format::parse(env, json);
-
-			Logger::get().debug("Game json: ", formatTest);
-			
-			Logger::get().debug("Game name: ", JS::Format::parse(env, read("name").ToLocalChecked()));
+			config.name = JS::parseString(env, read("name").ToLocalChecked());
 		});
 
 		instance_.emplace(new Engine(std::move(config)));
@@ -96,14 +93,17 @@ namespace DarkDescent
 
 	Engine::Engine(Config&& config): 
 		logger(Logger::get()),
+		config(config),
 		mainThreadID(std::this_thread::get_id()),
 		scriptManager_(*this),
+		windowManager_(*this),
 		initializedSystems_()
 	{
 		const Logger& logger = Logger::get();
 		logger.info("Initializing engine...");
 
 		initializeSubSystem(scriptManager_);
+		initializeSubSystem(windowManager_);
 
 		logger.info("Engine initialized!");
 	}
@@ -121,5 +121,12 @@ namespace DarkDescent
 		initializedSystems_.clear();
 
 		logger.info("Engine terminated!");
+	}
+
+	void Engine::run()
+	{
+		windowManager_.createWindow(config.name);
+
+		windowManager_.enterEventLoop();
 	}
 }

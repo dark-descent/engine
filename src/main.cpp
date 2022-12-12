@@ -22,7 +22,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	try
 	{
-		Engine::initialize("../../../game.json");
+		auto& engine = Engine::initialize("../../../game.json");
+		
+		engine.run();
 
 		Engine::terminate();
 	}
@@ -32,12 +34,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		return 2;
 	}
 
-	Logger::terminate();
-
 #if defined(_DEBUG) && defined(_WIN32)
+	logger.info("Press a key to exit...");
 	getchar();
 	FreeConsole();
 #endif
+
+	Logger::terminate();
 
 	return 0;
 }

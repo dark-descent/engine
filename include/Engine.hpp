@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "SubSystem.hpp"
 #include "Config.hpp"
+#include "WindowManager.hpp"
 
 namespace DarkDescent
 {
@@ -33,13 +34,17 @@ namespace DarkDescent
 			initializedSystems_.emplace_back(std::addressof(subSystem));
 		}
 
+	public:
+		void run();
 
 	public:
 		const std::thread::id mainThreadID;
 		const Logger& logger;
-	private:
+		const Config config;
 
+	private:
 		ScriptManager scriptManager_;
+		WindowManager windowManager_;
 		std::vector<SubSystem*> initializedSystems_;
 	};
 }
