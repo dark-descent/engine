@@ -35,11 +35,6 @@ namespace DarkDescent
 		SDL_UpdateWindowSurface(w.window);
 	}
 
-	void WindowManager::run()
-	{
-
-	}
-
 	void WindowManager::enterEventLoop()
 	{
 		assert(!isRunning_);

@@ -25,7 +25,6 @@ namespace DarkDescent
 
 		virtual void onInitialize();
 		virtual void onTerminate();
-		virtual void run();
 
 	private:
 		std::string name_;

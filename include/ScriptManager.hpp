@@ -35,7 +35,6 @@ namespace DarkDescent
 	protected:
 		virtual void onInitialize() override;
 		virtual void onTerminate() override;
-		virtual void run() override;
 
 		inline JS::Env& mainEnv() const { return *(envs_.at(0)); }
 

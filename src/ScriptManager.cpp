@@ -36,9 +36,4 @@ namespace DarkDescent
 			delete env;
 		envs_.clear();
 	}
-
-	void ScriptManager::run()
-	{
-
-	}
 }
