@@ -5,6 +5,7 @@
 #include "Hash.hpp"
 #include "Logger.hpp"
 #include "SubSystem.hpp"
+#include "Config.hpp"
 
 namespace DarkDescent
 {
@@ -14,12 +15,12 @@ namespace DarkDescent
 		static std::optional<Engine*> instance_;
 
 	public:
-		static Engine& initialize();
+		static Engine& initialize(const char* gamePath = nullptr);
 		static Engine& getInstance();
 		static bool terminate();
 
 	private:
-		Engine();
+		Engine(Config&&);
 		Engine(const Engine&) = delete;
 		Engine(Engine&&) = delete;
 		~Engine();

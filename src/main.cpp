@@ -15,14 +15,28 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	setupWinConsole();
 #endif
 
-	Logger::initialize(std::filesystem::current_path() / ".." / ".." / ".." / "logs");
-	Engine::initialize();
+	if(!Logger::initialize(std::filesystem::current_path() / ".." / ".." / ".." / "logs"))
+		return 1;
+		
+	const Logger& logger = Logger::get();
 
-	Engine::terminate();
+	try
+	{
+		Engine::initialize("../../../game.json");
+
+		Engine::terminate();
+	}
+	catch (const TraceException& e)
+	{
+		logger.exception(e);
+		return 2;
+	}
+
 	Logger::terminate();
 
 #if defined(_DEBUG) && defined(_WIN32)
 	getchar();
+	FreeConsole();
 #endif
 
 	return 0;

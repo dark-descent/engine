@@ -1,16 +1,73 @@
 #include "Engine.hpp"
 #include "TraceException.hpp"
 #include "Logger.hpp"
+#include "js/Helpers.hpp"
+#include "Utils.hpp"
+#include "js/Format.hpp"
 
 namespace DarkDescent
 {
 	std::optional<Engine*> Engine::instance_;
 
-	Engine& Engine::initialize()
+	Engine& Engine::initialize(const char* gamePath_)
 	{
 		if (instance_.has_value())
 			throw TraceException("Engine is already initialized!");
-		instance_.emplace(new Engine());
+
+		std::string gamePath;
+		std::filesystem::path gameJsonPath;
+
+		if (gamePath_ == nullptr)
+		{
+			gamePath = "game.json";
+		}
+		else
+		{
+			gamePath = gamePath_;
+		}
+
+		if (gameJsonPath.is_relative())
+		{
+			std::vector<std::filesystem::path> checkPaths = {
+				std::filesystem::current_path(),
+				Utils::getExecutablePath() / ".."
+			};
+
+			for(auto& path : checkPaths)
+			{
+				gameJsonPath = path / gamePath;
+				if(std::filesystem::exists(gameJsonPath))
+					break;
+			}
+		}
+
+		if(!std::filesystem::exists(gameJsonPath))
+			throw TraceException("Could not load the game!");
+
+		Config config;
+
+		ScriptManager::initializeV8();
+
+		ScriptManager::execStandAlone([&](const JS::Env& env)
+		{
+			auto json = env.readJsonFile(gameJsonPath).ToLocalChecked();
+
+			auto read = [&](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+			{
+				if(obj.IsEmpty())
+					obj = json;
+				return JS::getFromObject(env, obj, key);
+			};
+
+
+			auto formatTest = JS::Format::parse(env, json);
+
+			Logger::get().debug("Game json: ", formatTest);
+			
+			Logger::get().debug("Game name: ", JS::Format::parse(env, read("name").ToLocalChecked()));
+		});
+
+		instance_.emplace(new Engine(std::move(config)));
 		return *(instance_.value());
 	}
 
@@ -27,13 +84,17 @@ namespace DarkDescent
 		if (!instance_.has_value())
 			throw TraceException("Engine is not initialized!");
 
+
 		Engine* engine = instance_.value();
 		delete engine;
 		instance_.reset();
+
+		ScriptManager::terminateV8();
+
 		return true;
 	}
 
-	Engine::Engine():
+	Engine::Engine(Config&& config): 
 		logger(Logger::get()),
 		mainThreadID(std::this_thread::get_id()),
 		scriptManager_(*this),
@@ -52,7 +113,7 @@ namespace DarkDescent
 		const Logger& logger = Logger::get();
 		logger.info("Terminating engine...");
 
-		for(int i = static_cast<int>(initializedSystems_.size()) - 1; i >= 0; i--)
+		for (int i = static_cast<int>(initializedSystems_.size()) - 1; i >= 0; i--)
 		{
 			initializedSystems_[i]->terminate();
 		}
