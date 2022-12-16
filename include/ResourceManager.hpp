@@ -23,14 +23,14 @@ namespace DarkDescent
 			if (!resources_.contains(hash))
 				resources_.emplace(hash, T(path));
 			T& resource = resources_.at(hash);
-			pendingResources_.emplace_back(resource)
+			pendingResources_.emplace_back(resource);
 			return resource;
 		}
 
 		void loadResources();
 
 	private:
-		std::vector<Resource&> pendingResources_;
+		std::vector<Resource*> pendingResources_;
 		std::unordered_map<Hash, Resource> resources_;
 	};
 }

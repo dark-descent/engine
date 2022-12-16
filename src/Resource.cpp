@@ -2,20 +2,20 @@
 
 namespace DarkDescent
 {
-	Resource::Resource(std::string&& path) : 
+	Resource::Resource(std::string&& path):
 		path(path),
 		isLoaded_(false)
 	{
 
 	}
 
-	Resource::Resource(const std::string& path) : 
+	Resource::Resource(const std::string& path):
 		path(path),
 		isLoaded_(false)
 	{
 
 	}
-	
+
 	Resource::~Resource()
 	{
 
@@ -25,5 +25,9 @@ namespace DarkDescent
 	{
 		return isLoaded_;
 	}
-	
+
+	bool Resource::load()
+	{
+		return true;		
+	}
 }

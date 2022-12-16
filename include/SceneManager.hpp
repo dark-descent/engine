@@ -20,8 +20,8 @@ namespace DarkDescent
 		Scene& loadScene(const char* path);
 
 	private:
-		std::optional<Scene&> activeScene_;
-		std::optional<Scene&> loadingScene_;
+		std::optional<Scene*> activeScene_;
+		std::optional<Scene*> loadingScene_;
 
 		std::unordered_map<Hash, Scene> scenes_;
 	};
