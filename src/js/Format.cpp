@@ -11,13 +11,13 @@ namespace DarkDescent
 		{
 			namespace
 			{
-				constexpr size_t indentSize = 4;
+				constexpr std::size_t indentSize = 4;
 
 				char spaceBuf_[128] = { 0 };
 
-				inline std::string getSpaces(const size_t count)
+				inline std::string getSpaces(const std::size_t count)
 				{
-					for (size_t i = 0; i < count; i++)
+					for (std::size_t i = 0; i < count; i++)
 						spaceBuf_[i] = ' ';
 					spaceBuf_[count] = '\0';
 					return std::string(spaceBuf_);
@@ -26,11 +26,11 @@ namespace DarkDescent
 			/**
 			 * This is just a quick and dirty recursive function to format js object. Handy to print the object while debugging
 			 */
-			std::string parse(const Env& env, v8::Local<v8::Value> val, size_t indentCount, bool isObjectVal, bool skipIndent)
+			std::string parse(const Env& env, v8::Local<v8::Value> val, std::size_t indentCount, bool isObjectVal, bool skipIndent)
 			{
 				using namespace v8;
 
-				const size_t spaces = skipIndent ? 0 : indentCount * indentSize;
+				const std::size_t spaces = skipIndent ? 0 : indentCount * indentSize;
 
 				std::string parsedString = getSpaces(spaces);
 
@@ -86,8 +86,8 @@ namespace DarkDescent
 
 					const uint32_t l = keys->Length();
 					parsedString += +"[" + parseString(env, obj->GetConstructorName()) + "] {\n";
-					const size_t innerIndent = indentCount + 1;
-					const size_t innerSpaces = innerIndent * indentSize;
+					const std::size_t innerIndent = indentCount + 1;
+					const std::size_t innerSpaces = innerIndent * indentSize;
 					std::string innerSpacesString = getSpaces(innerSpaces);
 					for (uint32_t i = 0; i < l; i++)
 					{

@@ -3,15 +3,15 @@
 namespace DarkDescent::Bin
 {
 	TypeInfo::TypeInfo(): TypeInfo(0, 0, nullptr) { }
-	TypeInfo::TypeInfo(size_t type, size_t size): TypeInfo(type, size, nullptr) { }
-	TypeInfo::TypeInfo(size_t type, size_t size, const char* ptr): type(type), size(size), ptr(ptr) { }
+	TypeInfo::TypeInfo(std::size_t type, std::size_t size): TypeInfo(type, size, nullptr) { }
+	TypeInfo::TypeInfo(std::size_t type, std::size_t size, const char* ptr): type(type), size(size), ptr(ptr) { }
 
 	Writer::Writer(std::string path): file_(path) { }
 
 	void Writer::flushHeader(std::ofstream& os)
 	{
-		size_t size = header_.size() * sizeof(TypeInfo);
-		os.write(reinterpret_cast<const char*>(&size), sizeof(size_t));
+		std::size_t size = header_.size() * sizeof(TypeInfo);
+		os.write(reinterpret_cast<const char*>(&size), sizeof(std::size_t));
 		os.write(reinterpret_cast<const char*>(header_.data()), size);
 	}
 
@@ -21,9 +21,9 @@ namespace DarkDescent::Bin
 
 		flushHeader(os);
 
-		size_t infoIndex = 0;
+		std::size_t infoIndex = 0;
 
-		const size_t il = header_.size();
+		const std::size_t il = header_.size();
 
 		TypeInfo info = header_[infoIndex];
 
@@ -52,7 +52,7 @@ namespace DarkDescent::Bin
 		os.flush();
 	}
 
-	size_t Writer::flushVector(std::ofstream& os, size_t nextIndex, size_t size)
+	std::size_t Writer::flushVector(std::ofstream& os, std::size_t nextIndex, std::size_t size)
 	{
 		TypeInfo& next = header_.at(nextIndex);
 
@@ -60,7 +60,7 @@ namespace DarkDescent::Bin
 			return flushVector(os, nextIndex + 1, next.size);
 		else if (next.type == Type::STRING)
 		{
-			for (size_t i = 0; i < size; i++)
+			for (std::size_t i = 0; i < size; i++)
 			{
 				next = header_.at(nextIndex + i);
 				os.write(next.ptr, next.size);
@@ -77,8 +77,8 @@ namespace DarkDescent::Bin
 
 	Parser::Parser(std::ifstream& is) : is_(is), header_(), infoIndex_(0)
 	{
-		size_t size = 0;
-		is.read(reinterpret_cast<char*>(&size), sizeof(size_t));
+		std::size_t size = 0;
+		is.read(reinterpret_cast<char*>(&size), sizeof(std::size_t));
 		header_.resize(size);
 		is.read(reinterpret_cast<char*>(header_.data()), size);
 	}
@@ -112,7 +112,7 @@ namespace DarkDescent::Bin
 		}
 	}
 
-	size_t Parser::readVector(char* const ptr, size_t nextIndex, size_t size)
+	std::size_t Parser::readVector(char* const ptr, std::size_t nextIndex, std::size_t size)
 	{
 		TypeInfo& next = header_.at(nextIndex);
 
@@ -128,7 +128,7 @@ namespace DarkDescent::Bin
 		{
 			std::vector<std::vector<char>>* vec = reinterpret_cast<std::vector<std::vector<char>>*>(ptr);
 			vec->resize(size);
-			for (size_t i = 0; i < size; i++)
+			for (std::size_t i = 0; i < size; i++)
 			{
 				vec->at(i) = std::vector<char>();
 				nextIndex = readVector(reinterpret_cast<char*>(&vec->at(i)), nextIndex + 1, header_.at(nextIndex).size);
@@ -139,7 +139,7 @@ namespace DarkDescent::Bin
 		{
 			std::vector<std::string>* vec = reinterpret_cast<std::vector<std::string>*>(ptr);
 
-			for (size_t i = 0; i < size; i++)
+			for (std::size_t i = 0; i < size; i++)
 			{
 				next = header_.at(nextIndex + i);
 				std::string& str = vec->emplace_back(next.size, '\0');
@@ -150,7 +150,7 @@ namespace DarkDescent::Bin
 		}
 		else
 		{
-			const size_t blockSize = size * next.size;
+			const std::size_t blockSize = size * next.size;
 			std::vector<char>* vec = reinterpret_cast<std::vector<char>*>(ptr);
 			vec->resize(blockSize);
 			is_.read(vec->data(), blockSize);

@@ -4,15 +4,15 @@
 
 namespace DarkDescent
 {
-	using Hash = size_t;
+	using Hash = std::size_t;
 
 	namespace Hasher
 	{
 		namespace
 		{
-			constexpr size_t hashString(const char* str)
+			constexpr std::size_t hashString(const char* str)
 			{
-				size_t hash = 5381;
+				std::size_t hash = 5381;
 				int c;
 
 				while ((c = *str++))

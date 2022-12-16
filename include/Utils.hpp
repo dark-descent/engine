@@ -11,7 +11,7 @@ namespace DarkDescent
 		void formatPath(std::string& path);
 		void formatPath(char* path);
 
-		size_t getCurrentThreadID();
+		std::size_t getCurrentThreadID();
 
 		template<typename T>
 		constexpr T clamp(T val, T min, T max)

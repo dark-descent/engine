@@ -38,11 +38,11 @@ namespace DarkDescent
 		struct TypeInfo
 		{
 			TypeInfo();
-			TypeInfo(size_t type, size_t size);
-			TypeInfo(size_t type, size_t size, const char* ptr);
+			TypeInfo(std::size_t type, std::size_t size);
+			TypeInfo(std::size_t type, std::size_t size, const char* ptr);
 
-			size_t type;
-			size_t size;
+			std::size_t type;
+			std::size_t size;
 			const char* ptr;
 		};
 
@@ -72,16 +72,16 @@ namespace DarkDescent
 			template<typename T>
 			Writer& write(std::vector<T>& vector)
 			{
-				const size_t vectorSize = vector.size();
+				const std::size_t vectorSize = vector.size();
 				header_.push_back(TypeInfo(Type::VECTOR, vectorSize));
 				if constexpr (IsSpecialization<T, std::vector>::value)
 				{
-					for (size_t i = 0; i < vectorSize; i++)
+					for (std::size_t i = 0; i < vectorSize; i++)
 						write<T::value_type>(vector[i]);
 				}
 				else if constexpr (std::is_same<T, std::string>::value)
 				{
-					for (size_t i = 0; i < vectorSize; i++)
+					for (std::size_t i = 0; i < vectorSize; i++)
 					{
 						std::string& str = vector.at(i);
 						header_.push_back(TypeInfo(Type::STRING, str.length(), str.data()));
@@ -187,7 +187,7 @@ namespace DarkDescent
 
 		private:
 			void flushHeader(std::ofstream& os);
-			size_t flushVector(std::ofstream& os, size_t index, size_t size);
+			std::size_t flushVector(std::ofstream& os, std::size_t index, std::size_t size);
 
 			Header header_;
 			std::string file_;
@@ -203,7 +203,7 @@ namespace DarkDescent
 
 		private:
 			void read(char* ptr);
-			size_t readVector(char* ptr, size_t nextIndex, size_t size);
+			std::size_t readVector(char* ptr, std::size_t nextIndex, std::size_t size);
 
 		public:
 			template<typename T>
@@ -214,7 +214,7 @@ namespace DarkDescent
 
 		private:
 			std::ifstream& is_;
-			size_t infoIndex_;
+			std::size_t infoIndex_;
 			Header header_;
 		};
 

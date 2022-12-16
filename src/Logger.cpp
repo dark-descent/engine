@@ -133,7 +133,7 @@ namespace DarkDescent
 
 		if (!loggers_.contains(fileName))
 		{
-			size_t version = 0;
+			std::size_t version = 0;
 
 			bool exists;
 

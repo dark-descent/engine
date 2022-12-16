@@ -10,7 +10,7 @@ namespace DarkDescent
 
 		namespace Format
 		{
-			std::string parse(const Env& env, v8::Local<v8::Value> val, size_t indentCount = 0, bool isObjectVal = false, bool skipIndent = false);
+			std::string parse(const Env& env, v8::Local<v8::Value> val, std::size_t indentCount = 0, bool isObjectVal = false, bool skipIndent = false);
 		}
 	};
 };

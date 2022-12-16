@@ -72,18 +72,18 @@ namespace DarkDescent::JS
 	
 	v8::Local<v8::Array> mapStringArray(const Env& env, std::vector<const char*>& vec)
 	{
-		const size_t l = vec.size();
+		const std::size_t l = vec.size();
 		v8::Local<v8::Array> arr = v8::Array::New(env.isolate(), static_cast<uint32_t>(l));
-		for(size_t i = 0; i < l; i++)
+		for(std::size_t i = 0; i < l; i++)
 			arr->Set(env.context(), static_cast<uint32_t>(i), string(env, vec.at(i)));
 		return arr;
 	}
 
 	v8::Local<v8::Array> mapStringArray(const Env& env, std::vector<std::string>& vec)
 	{
-		const size_t l = vec.size();
+		const std::size_t l = vec.size();
 		v8::Local<v8::Array> arr = v8::Array::New(env.isolate(), static_cast<uint32_t>(l));
-		for(size_t i = 0; i < l; i++)
+		for(std::size_t i = 0; i < l; i++)
 			arr->Set(env.context(), static_cast<uint32_t>(i), string(env, vec.at(i)));
 		return arr;
 	}
