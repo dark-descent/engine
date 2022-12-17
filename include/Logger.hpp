@@ -102,11 +102,18 @@ namespace DarkDescent
 		std::string convertToString(std::string&& str, Rest... rest) const { return str + convertToString(rest...); }
 
 		template <typename T>
+			requires std::is_pointer_v<T>
+		std::string convertToString(T arg) const
+		{
+			return convertToString(static_cast<uint64_t>(arg));
+		}
+
+		template <typename T>
 		std::string convertToString(T arg) const
 		{
 			return std::to_string(arg);
 		}
-		
+
 
 		template <typename T, typename... Rest>
 		std::string convertToString(T arg, Rest... rest) const
