@@ -21,19 +21,24 @@ namespace DarkDescent
 	public:
 		struct Handle
 		{
-			Handle(Index&& index, T& data):
+			Handle(Index&& index, T* data):
 				index(index),
 				data(data)
 			{ }
 
-			Index index;
-			T& data;
+			Handle():
+				index(0),
+				data(nullptr)
+			{ }
 
-			Handle& operator=(Handle&& handle)
+			Index index;
+			T* data;
+
+			bool hasValue() const { return data != nullptr; }
+
+			T* operator->()
 			{
-				index = handle.index;
-				data = handle.data;
-				return *this;
+				return data;
 			}
 		};
 	private:
@@ -108,18 +113,13 @@ namespace DarkDescent
 		{
 			Index index = getNextIndex();
 			T* data = new (&buffers_[index.buffer]->data_[index.index]) T(std::forward<Args>(args)...);
-			return Handle(std::move(index), *data);
+			return Handle(std::move(index), data);
 		}
 
-		// void free(const T& data)
-		// {
-		// 	std::addressof(data);
-		// }
-
-		// void free(const Index& item)
-		// {
-
-		// }
+		void free(Index&& index)
+		{
+			freeStack_.emplace_back(std::move(index));
+		}
 
 		void free(Handle& handle)
 		{

@@ -11,11 +11,10 @@ namespace DarkDescent
 		const std::size_t index;
 		const std::size_t bitmask;
 
-		template<typename T>
-		ComponentInfo(std::size_t index):
-			size(sizeof(T)),
+		ComponentInfo(std::size_t size, std::size_t index):
+			size(size),
 			index(index),
-			bitmask(1 << index)
+			bitmask(1ULL << index)
 		{ }
 	};
 }

@@ -7,6 +7,9 @@
 #include "SubSystem.hpp"
 #include "Config.hpp"
 #include "WindowManager.hpp"
+#include "ComponentManager.hpp"
+#include "ArchManager.hpp"
+#include "GameObjectManager.hpp"
 
 namespace DarkDescent
 {
@@ -43,8 +46,11 @@ namespace DarkDescent
 		const Config config;
 
 	private:
+		ComponentManager componentManager_;
+		ArchManager archManager_;
 		ScriptManager scriptManager_;
 		WindowManager windowManager_;
+		GameObjectManager gameObjectManager_;
 		std::vector<SubSystem*> initializedSystems_;
 	};
 }

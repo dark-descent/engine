@@ -25,53 +25,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	{
 		auto& engine = Engine::initialize("../../../game.json");
 
-		// engine.run();
-
-		struct Test
-		{
-			std::size_t a = 0;
-			std::size_t b = 0;
-
-			std::string log()
-			{
-				return std::format("Test \na: {},  \nb: {}\n", a, b);
-			}
-
-			Test(std::size_t a, std::size_t b):
-				a(a),
-				b(b)
-			{ }
-		};
-
-		PersistentAllocator<Test> allocator = PersistentAllocator<Test>(5);
-		using Handle = PersistentAllocator<Test>::Handle;
-
-		std::vector<Handle> handles(1024);
-		std::vector<Handle> toDelete(1024);
-
-		for (std::size_t i = 0; i < 1024; i++)
-		{
-			if (i % 3 == 0)
-				handles.emplace_back(allocator.emplace(i, i));
-			else
-				toDelete.emplace_back(allocator.emplace(i, i));
-		}
-
-		for (auto& handle : toDelete)
-		{
-			allocator.free(handle);
-		}
-
-		for (std::size_t i = 0; i < (1024 / 3 * 2) - 1; i++)
-		{
-			handles.emplace_back(allocator.emplace(i, i));
-		}
-
-		
-		for (auto& handle : toDelete)
-		{
-			logger.info(handle.data);
-		}
+		engine.run();
 
 		Engine::terminate();
 	}

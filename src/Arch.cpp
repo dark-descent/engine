@@ -2,7 +2,8 @@
 
 namespace DarkDescent
 {
-	Arch::Arch(std::size_t bitmask, std::size_t size, std::size_t level, std::initializer_list<ComponentInfo*> components):
+	Arch::Arch(ArchManager& manager, std::size_t bitmask, std::size_t size, std::size_t level, std::initializer_list<ComponentInfo*> components):
+		manager_(manager),
 		bitmask(bitmask),
 		size(size),
 		level(level),
@@ -19,9 +20,9 @@ namespace DarkDescent
 		return nullptr;
 	}
 
-	Arch* Arch::addComponent(const Entity& entity, const ComponentInfo& component)
+	Arch& Arch::addComponent(Entity& entity, const ComponentInfo& component)
 	{
-		return nullptr;
+		return *this;
 	}
 
 	Entity Arch::allocEntity()

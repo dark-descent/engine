@@ -5,13 +5,14 @@
 
 namespace DarkDescent
 {
-	class Entity;
+	struct Entity;
 	class ComponentInfo;
+	class ArchManager;
 
 	class Arch
 	{
 	public:
-		Arch(std::size_t bitmask, std::size_t size, std::size_t level, std::initializer_list<ComponentInfo*> components);
+		Arch(ArchManager& manager, std::size_t bitmask, std::size_t size, std::size_t level, std::initializer_list<ComponentInfo*> components);
 
 		/**
 		 * @brief Gets a component that belongs to an entity.
@@ -27,14 +28,16 @@ namespace DarkDescent
 		 *
 		 * @param entity The entity.
 		 * @param component The component which should be added to the component.
-		 * @return Arch* The new arch to which the entity belongs
+		 * @return Arch& The new arch to which the entity belongs
 		 */
-		Arch* addComponent(const Entity& entity, const ComponentInfo& component);
+		Arch& addComponent(Entity& entity, const ComponentInfo& component);
 
 		Entity allocEntity();
 		void freeEntity(const Entity&);
 
-
+	private:
+		ArchManager& manager_;
+	
 	public:
 		const std::size_t bitmask;
 		const std::size_t size;

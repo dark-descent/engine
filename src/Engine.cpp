@@ -4,6 +4,9 @@
 #include "js/Helpers.hpp"
 #include "Utils.hpp"
 #include "js/Format.hpp"
+#include "GameObjectComponent.hpp"
+#include "Arch.hpp"
+#include "GameObject.hpp"
 
 namespace DarkDescent
 {
@@ -95,6 +98,9 @@ namespace DarkDescent
 		logger(Logger::get()),
 		config(config),
 		mainThreadID(std::this_thread::get_id()),
+		componentManager_(),
+		archManager_(),
+		gameObjectManager_(componentManager_, archManager_),
 		scriptManager_(*this),
 		windowManager_(*this),
 		initializedSystems_()
