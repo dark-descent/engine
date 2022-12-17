@@ -2,14 +2,16 @@
 
 namespace DarkDescent
 {
-	ArchBuffer::ArchBuffer(std::size_t& capacity)
+	ArchBuffer::ArchBuffer(std::size_t capacity):
+		buffer_(static_cast<char*>(_aligned_malloc(capacity, 0x40))),
+		ptr_(0)
 	{
 
 	}
 
 	ArchBuffer::~ArchBuffer()
 	{
-
+		_aligned_free(buffer_);
 	}
 
 	ArchBufferPool::ArchBufferPool(std::size_t archSize, std::size_t bufferCapacity):
@@ -25,7 +27,7 @@ namespace DarkDescent
 	void ArchBufferPool::addBuffer()
 	{
 		ptr_ = buffers_.size();
-		// buffers_.emplace_back(bufferSize_);
+		buffers_.emplace_back(bufferSize_);
 	}
 
 	Entity ArchBufferPool::alloc()
@@ -39,6 +41,12 @@ namespace DarkDescent
 
 	bool ArchBufferPool::free(const Entity& entity)
 	{
+		// TODO
 		return true;
+	}
+
+	char* ArchBufferPool::getRaw(const Entity& entity)
+	{
+		return buffers_[entity.bufferIndex]->buffer_ + (entity.index * archSize_);
 	}
 }

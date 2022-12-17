@@ -36,6 +36,9 @@ namespace DarkDescent
 		void freeEntity(const Entity&);
 
 	private:
+	std::size_t getComponentOffset(const ComponentInfo& component);
+
+	private:
 		ArchManager& manager_;
 	
 	public:
@@ -45,6 +48,7 @@ namespace DarkDescent
 
 	private:
 		ArchBufferPool bufferPool_;
+		std::vector<ComponentInfo*> components_;
 		std::vector<std::size_t> componentOffsets_;
 		std::vector<Arch*> prevArches_;
 		std::vector<Arch*> nextArches_;

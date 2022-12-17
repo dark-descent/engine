@@ -22,6 +22,4 @@ namespace DarkDescent
 	{
 
 	}
-	
-
 }

@@ -3,6 +3,7 @@
 namespace DarkDescent
 {
 	class Arch;
+	class ComponentManager;
 
 	class ArchManager
 	{
@@ -11,7 +12,7 @@ namespace DarkDescent
 		~ArchManager();
 
 		inline Arch& rootArch() const { return *rootArch_; }
-
+		
 	private:
 		Arch* rootArch_;
 	};

@@ -8,13 +8,13 @@ namespace DarkDescent
 	class ArchBuffer
 	{
 	public:
-		ArchBuffer(std::size_t& capacity);
+		ArchBuffer(std::size_t capacity);
 		ArchBuffer(const ArchBuffer&) = delete;
 		ArchBuffer(ArchBuffer&&) = delete;
 		~ArchBuffer();
 
 	private:
-		const char* buffer_;
+		char* buffer_;
 		std::size_t ptr_;
 
 		friend class ArchBufferPool;
@@ -27,6 +27,7 @@ namespace DarkDescent
 
 		Entity alloc();
 		bool free(const Entity& entity);
+		char* getRaw(const Entity& entity);
 
 	private:
 		void addBuffer();
