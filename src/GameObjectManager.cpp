@@ -4,13 +4,11 @@
 #include "Entity.hpp"
 #include "Arch.hpp"
 #include "ComponentManager.hpp"
-#include "GameObjectComponent.hpp"
 
 namespace DarkDescent
 {
 	GameObjectManager::GameObjectManager(ComponentManager& componentManager, ArchManager& archManager):
-		archManager_(archManager),
-		gameObjectComponent_(componentManager.registerComponent<GameObjectComponent>())
+		archManager_(archManager)
 	{
 
 	}
@@ -28,9 +26,9 @@ namespace DarkDescent
 
 	GameObject& GameObjectManager::getFromEntity(Arch& arch, Entity&& entity)
 	{
-		Arch& newArch = arch.addComponent(entity, gameObjectComponent_);
-		GameObjectComponent* component = static_cast<GameObjectComponent*>(newArch.getComponent(entity, gameObjectComponent_));
-		component->gameObject = gameObjects_.emplace(newArch, std::move(entity));
-		return *component->gameObject.data;
+		GameObjectHandle* handle = arch.getGameObject(entity);
+		if(!handle->hasValue())
+			*handle = gameObjects_.emplace(arch, std::forward<Entity>(entity));
+		return *(handle->data);
 	}
 }

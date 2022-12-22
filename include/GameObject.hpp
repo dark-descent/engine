@@ -3,6 +3,7 @@
 #include "Entity.hpp"
 #include "PersistentAllocator.hpp"
 #include "ComponentInfo.hpp"
+#include "Arch.hpp"
 
 namespace DarkDescent
 {

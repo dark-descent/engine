@@ -2,19 +2,21 @@
 
 #include "pch.hpp"
 #include "Entity.hpp"
+#include "GameObject.hpp"
 
 namespace DarkDescent
 {
 	class ArchBuffer
 	{
 	public:
-		ArchBuffer(std::size_t capacity);
+		ArchBuffer(std::size_t count, std::size_t archSize);
 		ArchBuffer(const ArchBuffer&) = delete;
 		ArchBuffer(ArchBuffer&&) = delete;
 		~ArchBuffer();
 
 	private:
 		char* buffer_;
+		GameObjectHandle* gameObjectBuffer_;
 		std::size_t ptr_;
 
 		friend class ArchBufferPool;
@@ -28,6 +30,7 @@ namespace DarkDescent
 		Entity alloc();
 		bool free(const Entity& entity);
 		char* getRaw(const Entity& entity);
+		GameObjectHandle* getGameObject(const Entity& entity);
 
 	private:
 		void addBuffer();

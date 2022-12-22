@@ -23,7 +23,6 @@ namespace DarkDescent
 
 	private:
 		ArchManager& archManager_;
-		ComponentInfo gameObjectComponent_;
 		PersistentAllocator<GameObject> gameObjects_;
 	};
 }

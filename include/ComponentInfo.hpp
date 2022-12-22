@@ -7,6 +7,14 @@ namespace DarkDescent
 	class ComponentInfo
 	{
 	public:
+		static inline std::size_t bitmaskFromComponents(const std::vector<const ComponentInfo*>& components)
+		{
+			std::size_t bitmask = 0;
+			for (auto c : components)
+				bitmask |= c->bitmask;
+			return bitmask;
+		}
+
 		const std::size_t size;
 		const std::size_t index;
 		const std::size_t bitmask;

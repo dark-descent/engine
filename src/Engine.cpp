@@ -36,34 +36,34 @@ namespace DarkDescent
 				Utils::getExecutablePath() / ".."
 			};
 
-			for(auto& path : checkPaths)
+			for (auto& path : checkPaths)
 			{
 				gameJsonPath = path / gamePath;
-				if(std::filesystem::exists(gameJsonPath))
+				if (std::filesystem::exists(gameJsonPath))
 					break;
 			}
 		}
 
-		if(!std::filesystem::exists(gameJsonPath))
+		if (!std::filesystem::exists(gameJsonPath))
 			throw TraceException("Could not load the game!");
 
 		Config config;
 
 		ScriptManager::initializeV8();
 
-		ScriptManager::execStandAlone([&](const JS::Env& env)
+		ScriptManager::execStandAlone([ & ](const JS::Env& env)
 		{
 			auto json = env.readJsonFile(gameJsonPath).ToLocalChecked();
 
-			auto read = [&](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
 			{
-				if(obj.IsEmpty())
+				if (obj.IsEmpty())
 					obj = json;
 				return JS::getFromObject(env, obj, key);
 			};
-
+	
 			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
-
+	
 			config.name = JS::parseString(env, read("name").ToLocalChecked());
 		});
 
@@ -94,7 +94,7 @@ namespace DarkDescent
 		return true;
 	}
 
-	Engine::Engine(Config&& config): 
+	Engine::Engine(Config&& config):
 		logger(Logger::get()),
 		config(config),
 		mainThreadID(std::this_thread::get_id()),
@@ -132,6 +132,10 @@ namespace DarkDescent
 	void Engine::run()
 	{
 		windowManager_.createWindow(config.name);
+
+		auto& a = gameObjectManager_.create();
+		auto& b = gameObjectManager_.create();
+		auto& c = gameObjectManager_.create();
 
 		windowManager_.enterEventLoop();
 	}

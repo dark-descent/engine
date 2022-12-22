@@ -11,8 +11,16 @@ namespace DarkDescent
 
 	class Arch
 	{
+		private:
+			static std::size_t calculateArchSize(const std::vector<const ComponentInfo*>& components);
+
 	public:
-		Arch(ArchManager& manager, std::size_t bitmask, std::size_t size, std::size_t level, std::initializer_list<ComponentInfo*> components);
+		Arch(ArchManager& manager, std::vector<const ComponentInfo*> components);
+
+		inline GameObjectHandle* getGameObject(const Entity& entity)
+		{
+			return bufferPool_.getGameObject(entity);
+		}
 
 		/**
 		 * @brief Gets a component that belongs to an entity.
@@ -36,11 +44,14 @@ namespace DarkDescent
 		void freeEntity(const Entity&);
 
 	private:
-	std::size_t getComponentOffset(const ComponentInfo& component);
+		std::size_t getComponentOffset(const ComponentInfo& component);
+		Arch& getNextArch(const ComponentInfo& component);
+
+		Entity copyEntityFrom(Arch& arch, const Entity& entity);
 
 	private:
 		ArchManager& manager_;
-	
+
 	public:
 		const std::size_t bitmask;
 		const std::size_t size;
@@ -48,7 +59,7 @@ namespace DarkDescent
 
 	private:
 		ArchBufferPool bufferPool_;
-		std::vector<ComponentInfo*> components_;
+		std::vector<const ComponentInfo*> components_;
 		std::vector<std::size_t> componentOffsets_;
 		std::vector<Arch*> prevArches_;
 		std::vector<Arch*> nextArches_;
