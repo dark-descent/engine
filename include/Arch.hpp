@@ -1,68 +1,73 @@
 #pragma once
 
-#include "pch.hpp"
 #include "ArchBufferPool.hpp"
-#include "PersistentAllocator.hpp"
 
 namespace DarkDescent
 {
-	struct Entity;
-	class ComponentInfo;
 	class ArchManager;
-	class GameObject;
 
-	using GameObjectHandle = PersistentAllocator<GameObject>::Handle;
+	struct Component;
+	class Arch;
+
+	struct ComponentOffset
+	{
+		std::size_t size;
+		std::size_t offset;
+	};
+
+	struct ArchArm
+	{
+		Arch* arch;
+		std::size_t bitmask;
+		std::size_t splitOffset;
+		std::size_t size;
+		
+		ArchArm(Arch* arch, std::size_t bitmask, std::size_t splitOffset, std::size_t size):
+			arch(arch),
+			bitmask(bitmask),
+			splitOffset(splitOffset),
+			size(size)
+		{ }
+	};
 
 	class Arch
 	{
-		private:
-			static std::size_t calculateArchSize(const std::vector<const ComponentInfo*>& components);
-
 	public:
-		Arch(ArchManager& manager, std::vector<const ComponentInfo*> components);
-
-		GameObjectHandle* getGameObject(const Entity& entity);
-
-		/**
-		 * @brief Gets a component that belongs to an entity.
-		 *
-		 * @param entity The entity from which to fetch the component.
-		 * @param component The component to fetch.
-		 * @return void* a pointer to the components data.
-		 */
-		char* getComponent(const Entity& entity, const ComponentInfo& component);
-
-		/**
-		 * @brief Adds a component to an entity.
-		 *
-		 * @param entity The entity.
-		 * @param component The component which should be added to the component.
-		 * @return Arch& The new arch to which the entity belongs
-		 */
-		Arch& addComponent(Entity& entity, const ComponentInfo& component);
-
-		Entity allocEntity();
-		void freeEntity(const Entity&);
-
-	private:
-		std::size_t getComponentOffset(const ComponentInfo& component);
-		Arch& getNextArch(const ComponentInfo& component);
-
-		Entity copyEntityFrom(Arch& arch, const Entity& entity);
-
-	private:
-		ArchManager& manager_;
+		Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<Component*>&& components);
+		Arch(const Arch&) = delete;
+		Arch(Arch&&) = delete;
+		~Arch();
 
 	public:
 		const std::size_t bitmask;
-		const std::size_t size;
-		const std::size_t level;
+		std::size_t archSize;
+
+		Entity alloc();
+		void free(const Entity& entity);
+
+		Arch* addComponentToEntity(Entity& entity, const Component& component);
+		void* getComponentRaw(const Entity& entity, std::size_t bitmask) const;
+
+		template<typename T>
+		T* getComponent(const Entity& entity, std::size_t bitmask) const
+		{
+			return static_cast<T*>(getComponentRaw(entity, bitmask));
+		}
+
+		GameObjectHandle* getGameObjectHandle(const Entity& entity);
+
+		const ArchArm& getNext(const Component& component);
+		const ArchArm& getPrev(const Component& component);
+
+		const ComponentOffset& getComponentOffset(const Component& component) const;
+		const ComponentOffset& getComponentOffset(std::size_t bitmask) const;
 
 	private:
+		ArchManager& archManager_;
 		ArchBufferPool bufferPool_;
-		std::vector<const ComponentInfo*> components_;
-		std::vector<std::size_t> componentOffsets_;
-		std::vector<Arch*> prevArches_;
-		std::vector<Arch*> nextArches_;
+		std::vector<Component*> components_;
+		std::vector<ComponentOffset> offsets_;
+		std::vector<ArchArm*> next_;
+		std::vector<ArchArm*> prev_;
 	};
 }

@@ -13,7 +13,7 @@ namespace DarkDescent
 
 	class WindowManager: public SubSystem
 	{
-		SUB_SYSTEM_CTORS(WindowManager);
+		SUB_SYSTEM_CTORS(WindowManager) {};
 
 	protected:
 		virtual void onInitialize() override;

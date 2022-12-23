@@ -1,36 +1,46 @@
 #include "ArchManager.hpp"
-#include "Arch.hpp"
-#include "ComponentInfo.hpp"
-#include "Logger.hpp"
-#include "TraceException.hpp"
 
 namespace DarkDescent
 {
-	ArchManager::ArchManager():
-		arches_({ { 0, new Arch(*this, {}) } })
-	{ }
-
-	ArchManager::~ArchManager()
+	void ArchManager::onInitialize()
 	{
 
 	}
 
-	Arch& ArchManager::getArch(std::size_t bitmask)
+	void ArchManager::onTerminate()
 	{
-		if (!arches_.contains(bitmask))
+
+	}
+
+	void ArchManager::registerArch(Bitmask bitmask)
+	{
+		assert(!arches_.contains(bitmask));
+
+		std::vector<Component*> c;
+		std::size_t size = 0;
+
+		for (std::size_t i = 0; i < bitmask; i++)
 		{
-			std::string str = std::format("Could not get arch with bitmask {}", bitmask);
-			throw TraceException(str.c_str());
+			std::size_t b = 1ULL << i;
+			if ((bitmask & b) == b)
+			{
+				auto& component = components_.at(i);
+				size += component.size;
+				c.emplace_back(std::addressof(component));
+			}
 		}
-		return *arches_[bitmask];
+		arches_.emplace(std::piecewise_construct, std::forward_as_tuple(bitmask), std::forward_as_tuple(*this, bitmask, size, std::move(c)));
 	}
 
-	Arch& ArchManager::getArch(const std::vector<const ComponentInfo*>& components)
+	Arch* ArchManager::getArch(Bitmask bitmask)
 	{
-		auto bitmask = ComponentInfo::bitmaskFromComponents(components);
-		Logger::get().debug("get arch bitmask: ", bitmask);
 		if (!arches_.contains(bitmask))
-			arches_.insert({ bitmask, new Arch(*this, components) });
-		return *arches_[bitmask];
+			registerArch(bitmask);
+		return std::addressof(arches_.at(bitmask));
+	}
+
+	Entity ArchManager::allocEntity(Bitmask bitmask)
+	{
+		return getArch(bitmask)->alloc();
 	}
 }

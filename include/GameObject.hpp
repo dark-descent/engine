@@ -2,37 +2,28 @@
 
 #include "Entity.hpp"
 #include "PersistentAllocator.hpp"
-#include "ComponentInfo.hpp"
 
 namespace DarkDescent
 {
 	class Arch;
+	struct Component;
+
 	class GameObject
 	{
 	public:
-		GameObject(Arch& arch, Entity&& entity);
+		GameObject(Arch* arch, Entity&& entity);
 		~GameObject();
 
-	private:
-		void* addComponent(const ComponentInfo& component);
-		void* getComponent(const ComponentInfo& component);
-
-	public:
+		void addComponent(const Component& component);
+		void* getComponentRaw(const Component& component);
+	
 		template<typename T>
-		T& addComponent(const ComponentInfo& component)
+		T* getComponent(const Component& component)
 		{
-			assert(component.size == sizeof(T));
-			return *static_cast<T*>(addComponent(component));
+			return static_cast<T*>(getComponentRaw(component));
 		}
 
-		template<typename T>
-		T& getComponent(const ComponentInfo& component)
-		{
-			assert(component.size == sizeof(T));
-			return *static_cast<T*>(getComponent(component));
-		}
-
-		Arch& arch;
+		Arch* arch;
 		Entity entity;
 	};
 

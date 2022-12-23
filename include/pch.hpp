@@ -53,6 +53,7 @@
 #include <string_view>
 #include <stacktrace>
 #include <cstdlib>
+#include <array>
 // -----------  STANDARD INCLUDES  ----------- //
 
 

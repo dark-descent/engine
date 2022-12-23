@@ -1,110 +1,122 @@
 #include "Arch.hpp"
-#include "ComponentInfo.hpp"
-#include "TraceException.hpp"
+#include "Component.hpp"
 #include "ArchManager.hpp"
-#include "GameObject.hpp"
+#include "Logger.hpp"
 
 namespace DarkDescent
 {
-	std::size_t Arch::calculateArchSize(const std::vector<const ComponentInfo*>& components)
-	{
-		std::size_t size = 0;
-		for (auto& c : components)
-			size += c->size;
-		return size;
-	}
-
-	Arch::Arch(ArchManager& manager, std::vector<const ComponentInfo*> components):
-		manager_(manager),
-		bitmask(ComponentInfo::bitmaskFromComponents(components)),
-		size(calculateArchSize(components)),
-		level(components.size()),
-		bufferPool_(size, 1024),
+	Arch::Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<Component*>&& components):
+		bitmask(bitmask),
+		archSize(archSize),
+		archManager_(archManager),
+		bufferPool_(archSize, 1024),
 		components_(components),
-		componentOffsets_(),
-		prevArches_(),
-		nextArches_()
+		offsets_(components.size(), { 0, 0 })
 	{
-		std::vector<const ComponentInfo*> sorted(components.size());
-		std::partial_sort_copy(std::begin(components), std::end(components), begin(sorted), end(sorted), [](const ComponentInfo* a, const ComponentInfo* b) { return a->index - b->index; });
+		Logger::get().info("Created arch\n  - bitmask: ", bitmask, "\n  - size: ", archSize);
 
 		std::size_t offset = 0;
-		for (auto& component : components_)
+		for (std::size_t i = 0, l = components_.size(); i < l; i++)
 		{
-			componentOffsets_.emplace_back(offset);
-			offset += component->size;
+			const std::size_t s = components_.at(i)->size;
+			offsets_[i].size = s;
+			offsets_[i].offset = offset;
+			offset += s;
 		}
 	}
 
-	GameObjectHandle* Arch::getGameObject(const Entity& entity)
+	Arch::~Arch()
 	{
-		return bufferPool_.getGameObject(entity);
+
 	}
 
-	std::size_t Arch::getComponentOffset(const ComponentInfo& component)
-	{
-		std::size_t i = 0;
-		for (auto& c : components_)
-		{
-			if (c->bitmask == component.bitmask)
-				return componentOffsets_[i];
-			i++;
-		}
-		throw TraceException("Cannot get component!");
-	}
-
-	Arch& Arch::getNextArch(const ComponentInfo& component)
-	{
-		auto bm = bitmask | component.bitmask;;
-		for (auto& a : nextArches_)
-		{
-			if (a->bitmask == bm)
-				return *a;
-		}
-
-		std::vector<const ComponentInfo*> componentInfos = components_;
-		componentInfos.emplace_back(std::addressof(component));
-		Arch& arch = manager_.getArch(componentInfos);
-		nextArches_.emplace_back(std::addressof(arch));
-		return arch;
-	}
-
-	char* Arch::getComponent(const Entity& entity, const ComponentInfo& component)
-	{
-		return bufferPool_.getRaw(entity) + getComponentOffset(component);
-	}
-
-	Entity Arch::copyEntityFrom(Arch& arch, const Entity& entity)
-	{
-		const Entity e = allocEntity();
-		char* baseFrom = arch.bufferPool_.getRaw(entity);
-		char* baseTo = bufferPool_.getRaw(e);
-		for(const auto& component : arch.components_)
-		{
-			const auto offsetFrom = arch.getComponentOffset(*component);
-			const auto offsetTo = getComponentOffset(*component);
-			memcpy(baseTo + offsetTo, baseFrom + offsetFrom, component->size);
-		}
-		return e;
-	}
-
-	Arch& Arch::addComponent(Entity& entity, const ComponentInfo& component)
-	{
-		auto& newArch = getNextArch(component);
-		auto newEntity = newArch.copyEntityFrom(*this, entity);
-		freeEntity(entity);
-		entity.bufferIndex = newEntity.bufferIndex;
-		entity.index = newEntity.index;
-		return newArch;
-	}
-
-	Entity Arch::allocEntity()
+	Entity Arch::alloc()
 	{
 		return bufferPool_.alloc();
 	}
 
-	void Arch::freeEntity(const Entity&)
+	void Arch::free(const Entity& entity)
 	{
-		// TODO
+		bufferPool_.free(entity);
 	}
+
+	Arch* Arch::addComponentToEntity(Entity& entity, const Component& component)
+	{
+		const ArchArm& nextArch = getNext(component);
+		const Entity newEntity = nextArch.arch->alloc();
+
+		char* toBuffer = nextArch.arch->bufferPool_.getRaw(newEntity);
+		char* fromBuffer = bufferPool_.getRaw(entity);
+		const auto split = nextArch.splitOffset;
+
+		if (split == archSize)
+		{
+			memcpy(toBuffer, fromBuffer, archSize);
+		}
+		else if (split == 0)
+		{
+			memcpy(toBuffer + component.size, fromBuffer, archSize);
+		}
+		else
+		{
+			memcpy(toBuffer, fromBuffer, split);
+			memcpy(toBuffer + split + component.size, fromBuffer + split, archSize - split);
+		}
+
+		free(entity);
+		entity = newEntity;
+
+		return nextArch.arch;
+	}
+
+	void* Arch::getComponentRaw(const Entity& entity, std::size_t bitmask) const
+	{
+		return bufferPool_.getRaw(entity) + getComponentOffset(bitmask).offset;
+	}
+
+	GameObjectHandle* Arch::getGameObjectHandle(const Entity& entity)
+	{
+		return bufferPool_.getGameObject(entity);
+	}
+
+	const ComponentOffset& Arch::getComponentOffset(const Component& component) const
+	{
+		return getComponentOffset(component.bitmask);
+	}
+
+	const ComponentOffset& Arch::getComponentOffset(std::size_t bitmask) const
+	{
+		for (std::size_t i = 0, l = offsets_.size(); i < l; i++)
+		{
+			if (components_[i]->bitmask == bitmask)
+			{
+				return offsets_[i];
+			}
+		}
+		throw false;
+	}
+
+	const ArchArm& Arch::getNext(const Component& component)
+	{
+		for (const auto& a : next_)
+		{
+			if (a->bitmask == component.bitmask)
+			{
+				return *a;
+			}
+		}
+
+		const auto b = bitmask | component.bitmask;
+
+		Arch* newArch = archManager_.getArch(b);
+		const auto& offset = newArch->getComponentOffset(component);
+		return *next_.emplace_back(new ArchArm(newArch, component.bitmask, offset.offset, component.size));
+	}
+
+	const ArchArm& Arch::getPrev(const Component& component)
+	{
+		// TODO:
+		throw "!!! TODO !!!";
+	}
+
 }

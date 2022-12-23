@@ -30,7 +30,7 @@ namespace DarkDescent
 		}
 
 	protected:
-		SUB_SYSTEM_CTORS(ScriptManager);
+		SUB_SYSTEM_CTORS(ScriptManager) {};
 
 	protected:
 		virtual void onInitialize() override;

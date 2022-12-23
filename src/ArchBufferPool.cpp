@@ -51,7 +51,7 @@ namespace DarkDescent
 		return true;
 	}
 
-	char* ArchBufferPool::getRaw(const Entity& entity)
+	char* ArchBufferPool::getRaw(const Entity& entity) const
 	{
 		return buffers_[entity.bufferIndex]->buffer_ + (entity.index * archSize_);
 	}

@@ -4,9 +4,11 @@
 #include "js/Helpers.hpp"
 #include "Utils.hpp"
 #include "js/Format.hpp"
-#include "Arch.hpp"
-#include "GameObject.hpp"
 #include "TransformComponent.hpp"
+#include "ScriptManager.hpp"
+#include "WindowManager.hpp"
+#include "ArchManager.hpp"
+#include "GameObjectManager.hpp"
 
 namespace DarkDescent
 {
@@ -98,18 +100,18 @@ namespace DarkDescent
 		logger(Logger::get()),
 		config(config),
 		mainThreadID(std::this_thread::get_id()),
-		componentManager_(),
-		archManager_(),
-		gameObjectManager_(componentManager_, archManager_),
-		scriptManager_(*this),
-		windowManager_(*this),
-		initializedSystems_()
+		subSystems_(),
+		initializationOrder_()
 	{
 		const Logger& logger = Logger::get();
 		logger.info("Initializing engine...");
 
-		initializeSubSystem(scriptManager_);
-		initializeSubSystem(windowManager_);
+		initializeSubSystem<ArchManager>();
+		initializeSubSystem<GameObjectManager>();
+		initializeSubSystem<ScriptManager>();
+		initializeSubSystem<WindowManager>();
+
+
 
 		logger.info("Engine initialized!");
 	}
@@ -119,56 +121,63 @@ namespace DarkDescent
 		const Logger& logger = Logger::get();
 		logger.info("Terminating engine...");
 
-		for (int i = static_cast<int>(initializedSystems_.size()) - 1; i >= 0; i--)
+		for (int i = static_cast<int>(initializationOrder_.size()) - 1; i >= 0; i--)
 		{
-			initializedSystems_[i]->terminate();
+			initializationOrder_[i]->terminate();
 		}
 
-		initializedSystems_.clear();
+		initializationOrder_.clear();
 
 		logger.info("Engine terminated!");
 	}
 
+	struct A
+	{
+		int a;
+
+		COMPONENT_DATA();
+	};
+
+	struct B
+	{
+		int x;
+		int y;
+
+		COMPONENT_DATA();
+	};
+
+	INITIALIZE_COMPONENT_DATA(A);
+	INITIALIZE_COMPONENT_DATA(B);
+
 	void Engine::run()
 	{
-		windowManager_.createWindow(config.name);
+		WindowManager* wm = getSubSystem<WindowManager>();
+		ArchManager* am = getSubSystem<ArchManager>();
+		GameObjectManager* gm = getSubSystem<GameObjectManager>();
 
-		struct TestA
+		auto componentA = am->registerComponent<A>();
+		auto componentB = am->registerComponent<B>();
 		{
-			float x;
-			float y;
-			float z;
-		};
-
-		struct TestB
-		{
-			char str[10];
-		};
-
-		const ComponentInfo& transform = componentManager_.registerComponent<Transform>();
-		const ComponentInfo& testA = componentManager_.registerComponent<TestA>();
-		const ComponentInfo& testB = componentManager_.registerComponent<TestB>();
-
-		auto& a = gameObjectManager_.create();
-		auto& b = gameObjectManager_.create();
-		auto& c = gameObjectManager_.create();
-
-		auto& t = a.addComponent<Transform>(transform);
-		t.x = 1.0f;
-		t.y = 2.0f;
-
-		TestA& ta = a.addComponent<TestA>(testA);
-		ta.x = 44.0f;
-		ta.y = 45.0f;
-		ta.z = 46.0f;
-
-		auto& tb = a.addComponent<TestB>(testB);
-
-		t = a.getComponent<Transform>(transform);
-		ta = a.getComponent<TestA>(testA);
-
+			GameObject& o = gm->create();
+			o.addComponent(componentA);
+			o.addComponent(componentB);
+		}
 		
+		{
+			GameObject& o = gm->create();
+			o.addComponent(componentA);
+			A* a = o.getComponent<A>(componentA);
+			a->a = 123;
 
-		windowManager_.enterEventLoop();
+			o.addComponent(componentB);
+			B* b = o.getComponent<B>(componentB);
+			a = o.getComponent<A>(componentA);
+			b->x = 2;
+			b->y = 3;
+
+			wm->createWindow(config.name);
+
+			wm->enterEventLoop();
+		}
 	}
 }

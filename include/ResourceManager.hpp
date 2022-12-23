@@ -9,7 +9,7 @@ namespace DarkDescent
 {
 	class ResourceManager: public SubSystem
 	{
-		SUB_SYSTEM_CTORS(ResourceManager);
+		SUB_SYSTEM_CTORS(ResourceManager) {};
 
 	protected:
 		virtual void onInitialize() override;

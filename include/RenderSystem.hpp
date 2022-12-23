@@ -7,7 +7,7 @@ namespace DarkDescent
 {
 	class RenderSystem: public SubSystem
 	{
-		SUB_SYSTEM_CTORS(RenderSystem);
+		SUB_SYSTEM_CTORS(RenderSystem) {};
 
 	protected:
 		virtual void onInitialize() override;

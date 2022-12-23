@@ -1,9 +1,10 @@
 #include "GameObject.hpp"
 #include "Arch.hpp"
+#include "Component.hpp"
 
 namespace DarkDescent
 {
-	GameObject::GameObject(Arch& arch, Entity&& entity):
+	GameObject::GameObject(Arch* arch, Entity&& entity):
 		arch(arch),
 		entity(entity)
 	{
@@ -15,14 +16,13 @@ namespace DarkDescent
 
 	}
 
-	void* GameObject::addComponent(const ComponentInfo& component)
+	void GameObject::addComponent(const Component& component)
 	{
-		auto a = arch.addComponent(entity, component);
-		return a.getComponent(entity, component);
+		arch = arch->addComponentToEntity(entity, component);
 	}
 
-	void* GameObject::getComponent(const ComponentInfo& component)
+	void* GameObject::getComponentRaw(const Component& component)
 	{
-		return arch.getComponent(entity, component);
+		return arch->getComponentRaw(entity, component.bitmask);
 	}
 }

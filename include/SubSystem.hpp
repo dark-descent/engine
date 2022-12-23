@@ -1,10 +1,10 @@
 #pragma once
 
-#define SUB_SYSTEM_CTORS(CLASS_NAME) CLASS_NAME(const Engine& engine): SubSystem(engine) { } \
+#define SUB_SYSTEM_CTORS(CLASS_NAME) friend class Engine; \
 CLASS_NAME(const CLASS_NAME&) = delete; \
 CLASS_NAME(CLASS_NAME&&) = delete; \
 virtual ~CLASS_NAME() { } \
-friend class Engine;
+CLASS_NAME(const Engine& engine): SubSystem(engine)
 
 
 namespace DarkDescent

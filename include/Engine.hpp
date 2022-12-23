@@ -1,15 +1,11 @@
 #pragma once
 
 #include "pch.hpp"
-#include "ScriptManager.hpp"
 #include "Hash.hpp"
 #include "Logger.hpp"
 #include "SubSystem.hpp"
 #include "Config.hpp"
-#include "WindowManager.hpp"
-#include "ComponentManager.hpp"
-#include "ArchManager.hpp"
-#include "GameObjectManager.hpp"
+#include "TraceException.hpp"
 
 namespace DarkDescent
 {
@@ -29,16 +25,37 @@ namespace DarkDescent
 		Engine(Engine&&) = delete;
 		~Engine();
 
-		template<typename T>
-			requires IsSubSystem<T>
-		void initializeSubSystem(T& subSystem)
+		template<IsSubSystem T>
+		void initializeSubSystem()
 		{
-			subSystem.initialize(typeid(T).name());
-			initializedSystems_.emplace_back(std::addressof(subSystem));
+			const char* name = typeid(T).name();
+			Hash hash = Hasher::hash(name);
+
+			assert(!subSystems_.contains(hash));
+
+			T* subSystem = new T(*this);
+			subSystems_.emplace(hash, subSystem);
+			initializationOrder_.emplace_back(subSystem);
+			subSystem->initialize(name);
 		}
 
 	public:
 		void run();
+
+		template<IsSubSystem T>
+		T* getSubSystem() const
+		{
+			const char* name = typeid(T).name();
+			Hash hash = Hasher::hash(name);
+
+			if(!subSystems_.contains(hash))
+			{
+				std::string error = std::format("Could not get subsystem for type {}!", name);
+				throw TraceException(error.c_str());
+			}
+
+			return static_cast<T*>(subSystems_.at(hash));
+		}
 
 	public:
 		const std::thread::id mainThreadID;
@@ -46,11 +63,7 @@ namespace DarkDescent
 		const Config config;
 
 	private:
-		ComponentManager componentManager_;
-		ArchManager archManager_;
-		ScriptManager scriptManager_;
-		WindowManager windowManager_;
-		GameObjectManager gameObjectManager_;
-		std::vector<SubSystem*> initializedSystems_;
+		std::unordered_map<Hash, SubSystem*> subSystems_;
+		std::vector<SubSystem*> initializationOrder_;
 	};
 }

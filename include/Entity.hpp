@@ -12,8 +12,13 @@ namespace DarkDescent
 		{
 
 		}
-
+		/**
+		 * @brief The index to get the correct buffer
+		 */
 		std::size_t bufferIndex;
+		/**
+		 * @brief The index into the buffer.
+		 */
 		std::size_t index;
 	};
 };

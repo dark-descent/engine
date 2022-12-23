@@ -1,28 +1,26 @@
 #pragma once
 
+#include "SubSystem.hpp"
 #include "GameObject.hpp"
 #include "PersistentAllocator.hpp"
-#include "ComponentInfo.hpp"
 
 namespace DarkDescent
 {
-	struct Entity;
 	class ArchManager;
-	class Arch;
-	class ComponentManager;
 
-	class GameObjectManager
-	{
+	class GameObjectManager final: public SubSystem
+	{	
 	public:
-		GameObjectManager(ComponentManager& componentManager, ArchManager& archManager);
-		~GameObjectManager();
+		SUB_SYSTEM_CTORS(GameObjectManager), archManager_(nullptr) {}
 
 		GameObject& create();
 
-		GameObject& getFromEntity(Arch& arch, Entity&& entity);
+	protected:
+		virtual void onInitialize();
+		virtual void onTerminate();
 
 	private:
-		ArchManager& archManager_;
+		ArchManager* archManager_;
 		PersistentAllocator<GameObject> gameObjects_;
 	};
 }

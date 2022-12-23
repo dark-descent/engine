@@ -10,7 +10,7 @@ namespace DarkDescent
 
 	class SceneManager: public SubSystem
 	{
-		SUB_SYSTEM_CTORS(SceneManager);
+		SUB_SYSTEM_CTORS(SceneManager) {};
 
 	protected:
 		virtual void onInitialize() override;

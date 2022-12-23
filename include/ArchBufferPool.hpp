@@ -29,7 +29,7 @@ namespace DarkDescent
 
 		Entity alloc();
 		bool free(const Entity& entity);
-		char* getRaw(const Entity& entity);
+		char* getRaw(const Entity& entity) const;
 		GameObjectHandle* getGameObject(const Entity& entity);
 
 	private:
