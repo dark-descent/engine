@@ -9,6 +9,7 @@
 #include "WindowManager.hpp"
 #include "ArchManager.hpp"
 #include "GameObjectManager.hpp"
+#include "Component.hpp"
 
 namespace DarkDescent
 {
@@ -131,23 +132,28 @@ namespace DarkDescent
 		logger.info("Engine terminated!");
 	}
 
-	struct A
+	struct A: public Component<A>
 	{
-		int a;
+		A(std::size_t a = 0): Component(), a(a) { }
+		std::size_t a;
 
-		COMPONENT_DATA();
+		std::string log()
+		{
+			return std::format("struct A\n  a = {}", a);
+		}
 	};
 
-	struct B
+	struct B: public Component<B>
 	{
-		int x;
-		int y;
+		B(std::size_t x = 0, std::size_t y = 0): Component(), x(x), y(y) { }
+		std::size_t x;
+		std::size_t y;
 
-		COMPONENT_DATA();
+		std::string log()
+		{
+			return std::format("struct B\n  x = {}\n  y = {}", x, y);
+		}
 	};
-
-	INITIALIZE_COMPONENT_DATA(A);
-	INITIALIZE_COMPONENT_DATA(B);
 
 	void Engine::run()
 	{
@@ -155,29 +161,54 @@ namespace DarkDescent
 		ArchManager* am = getSubSystem<ArchManager>();
 		GameObjectManager* gm = getSubSystem<GameObjectManager>();
 
-		auto componentA = am->registerComponent<A>();
-		auto componentB = am->registerComponent<B>();
+		am->registerComponent<A>();
+		am->registerComponent<B>();
+		am->registerComponent<Transform>();
+
+		std::vector<GameObject*> gos;
+
+		for (std::size_t n = 0; n < 100; n++)
 		{
-			GameObject& o = gm->create();
-			o.addComponent(componentA);
-			o.addComponent(componentB);
+			for (std::size_t i = 0; i < 1024; i++)
+			{
+				GameObject* o = gm->create();
+				o->addComponent<Transform>(i * 2.0f * n, i * 3.0f * n);
+
+				// Transform& t = *o->getComponent<Transform>();
+
+				// logger.info(t);
+
+				gos.emplace_back(o);
+			}
 		}
-		
+
+		std::size_t i = 0;
+		for (auto& o : gos)
 		{
-			GameObject& o = gm->create();
-			o.addComponent(componentA);
-			A* a = o.getComponent<A>(componentA);
-			a->a = 123;
-
-			o.addComponent(componentB);
-			B* b = o.getComponent<B>(componentB);
-			a = o.getComponent<A>(componentA);
-			b->x = 2;
-			b->y = 3;
-
-			wm->createWindow(config.name);
-
-			wm->enterEventLoop();
+			i++;
+			o->addComponent<B>(3 * i, 3 * i);
 		}
+
+		for (auto& o : gos)
+		{
+			i++;
+			o->addComponent<A>(2 * i);
+		}
+
+		// i = 0;
+		// for (auto& o : gos)
+		// {
+		// 	if (i % 123 == 0)
+		// 	{
+		// 		A& a = *o->getComponent<A>();
+		// 		B& b = *o->getComponent<B>();
+		// 		Transform& t = *o->getComponent<Transform>();
+		// 		// logger.info(a, b, t);
+		// 	}
+		// }
+
+		wm->createWindow(config.name);
+
+		wm->enterEventLoop();
 	}
 }

@@ -13,7 +13,7 @@ namespace DarkDescent
 	public:
 		SUB_SYSTEM_CTORS(GameObjectManager), archManager_(nullptr) {}
 
-		GameObject& create();
+		GameObject* create();
 
 	protected:
 		virtual void onInitialize();

@@ -16,7 +16,7 @@ namespace DarkDescent
 	{
 		assert(!arches_.contains(bitmask));
 
-		std::vector<Component*> c;
+		std::vector<ComponentInfo*> c;
 		std::size_t size = 0;
 
 		for (std::size_t i = 0; i < bitmask; i++)

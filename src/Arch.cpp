@@ -5,7 +5,7 @@
 
 namespace DarkDescent
 {
-	Arch::Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<Component*>&& components):
+	Arch::Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<ComponentInfo*>&& components):
 		bitmask(bitmask),
 		archSize(archSize),
 		archManager_(archManager),
@@ -40,7 +40,7 @@ namespace DarkDescent
 		bufferPool_.free(entity);
 	}
 
-	Arch* Arch::addComponentToEntity(Entity& entity, const Component& component)
+	Arch* Arch::addComponentToEntity(Entity& entity, const ComponentInfo& component)
 	{
 		const ArchArm& nextArch = getNext(component);
 		const Entity newEntity = nextArch.arch->alloc();
@@ -79,7 +79,7 @@ namespace DarkDescent
 		return bufferPool_.getGameObject(entity);
 	}
 
-	const ComponentOffset& Arch::getComponentOffset(const Component& component) const
+	const ComponentOffset& Arch::getComponentOffset(const ComponentInfo& component) const
 	{
 		return getComponentOffset(component.bitmask);
 	}
@@ -96,7 +96,7 @@ namespace DarkDescent
 		throw false;
 	}
 
-	const ArchArm& Arch::getNext(const Component& component)
+	const ArchArm& Arch::getNext(const ComponentInfo& component)
 	{
 		for (const auto& a : next_)
 		{
@@ -113,7 +113,7 @@ namespace DarkDescent
 		return *next_.emplace_back(new ArchArm(newArch, component.bitmask, offset.offset, component.size));
 	}
 
-	const ArchArm& Arch::getPrev(const Component& component)
+	const ArchArm& Arch::getPrev(const ComponentInfo& component)
 	{
 		// TODO:
 		throw "!!! TODO !!!";

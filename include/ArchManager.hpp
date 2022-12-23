@@ -8,14 +8,7 @@
 #include "Component.hpp"
 
 namespace DarkDescent
-{	
-	template<typename T>
-	concept ComponentType = requires(T)
-	{
-		T::index;
-		T::bitmask;
-	};
-
+{
 	class ArchManager: public SubSystem
 	{
 		using Bitmask = std::size_t;
@@ -38,8 +31,8 @@ namespace DarkDescent
 			return false;
 		}
 
-		template<ComponentType T>
-		const Component& registerComponent()
+		template<ExtendsComponent T>
+		const ComponentInfo& registerComponent()
 		{
 			Hash h = Hasher::hash(typeid(T).name());
 
@@ -59,30 +52,21 @@ namespace DarkDescent
 
 			T::index = index;
 			T::bitmask = bitmask;
+			T::isInitialized = true;
 
 			return components_[index];
 		}
 
-		template<typename T>
-		const Component& getComponent()
+		inline const ComponentInfo& getComponent(const std::size_t index)
 		{
-			Hash h = Hasher::hash(typeid(T).name());
-
-			for (std::size_t i = 0, l = registeredComponents_.size(); i < l; i++)
-			{
-				if (registeredComponents_[i] == h)
-					return components_[i];
-			}
-
-			std::string error = std::format("Could not get component for type {}!", typeid(T).name());
-
-			throw TraceException(error.c_str());
+			return components_.at(index);
 		}
 
-		template<typename T>
-		inline Bitmask getComponentBitmask()	
+		template<ExtendsComponent T>
+		const ComponentInfo& getComponent()
 		{
-			return getComponent<T>().bitmask;
+			assert(T::isInitialized);
+			return components_.at(T::index);
 		}
 
 		Arch* getArch(Bitmask bitmask);
@@ -99,7 +83,7 @@ namespace DarkDescent
 	private:
 		std::size_t componentCounter_;
 		std::array<Hash, 64> registeredComponents_;
-		std::array<Component, 64> components_;
+		std::array<ComponentInfo, 64> components_;
 
 		std::unordered_map<Bitmask, Arch> arches_;
 	};

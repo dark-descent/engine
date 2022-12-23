@@ -2,11 +2,12 @@
 
 #include "Entity.hpp"
 #include "PersistentAllocator.hpp"
+#include "Component.hpp"
 
 namespace DarkDescent
 {
 	class Arch;
-	struct Component;
+	struct ComponentInfo;
 
 	class GameObject
 	{
@@ -14,15 +15,32 @@ namespace DarkDescent
 		GameObject(Arch* arch, Entity&& entity);
 		~GameObject();
 
-		void addComponent(const Component& component);
-		void* getComponentRaw(const Component& component);
-	
-		template<typename T>
-		T* getComponent(const Component& component)
+		void addComponent(const ComponentInfo& component);
+		void addComponent(const std::size_t componentIndex);
+
+		template<ExtendsComponent T>
+		void addComponent()
 		{
-			return static_cast<T*>(getComponentRaw(component));
+			addComponent(T::index);
 		}
 
+		template<ExtendsComponent T, typename... Args>
+		void addComponent(Args&&... args)
+		{
+			addComponent(T::index);
+			T* ptr = getComponent<T>();
+			new (ptr) T(std::forward<Args>(args)...);
+		}
+
+		void* getComponentRaw(const ComponentInfo& component) const;
+		void* getComponentRaw(const std::size_t bitmask) const;
+
+		template<ExtendsComponent T>
+		T* getComponent()
+		{
+			return static_cast<T*>(getComponentRaw(T::bitmask));
+		}
+	
 		Arch* arch;
 		Entity entity;
 	};

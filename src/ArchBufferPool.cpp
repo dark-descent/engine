@@ -40,7 +40,7 @@ namespace DarkDescent
 	{
 		const std::size_t bufferIndex = ptr_;
 		std::size_t index = buffers_[bufferIndex]->ptr_++;
-		if (bufferIndex >= bufferCapacity_)
+		if (index >= bufferCapacity_)
 			addBuffer();
 		return Entity(bufferIndex, index);
 	}

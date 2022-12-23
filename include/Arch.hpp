@@ -6,7 +6,7 @@ namespace DarkDescent
 {
 	class ArchManager;
 
-	struct Component;
+	struct ComponentInfo;
 	class Arch;
 
 	struct ComponentOffset
@@ -33,7 +33,7 @@ namespace DarkDescent
 	class Arch
 	{
 	public:
-		Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<Component*>&& components);
+		Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<ComponentInfo*>&& components);
 		Arch(const Arch&) = delete;
 		Arch(Arch&&) = delete;
 		~Arch();
@@ -45,7 +45,7 @@ namespace DarkDescent
 		Entity alloc();
 		void free(const Entity& entity);
 
-		Arch* addComponentToEntity(Entity& entity, const Component& component);
+		Arch* addComponentToEntity(Entity& entity, const ComponentInfo& component);
 		void* getComponentRaw(const Entity& entity, std::size_t bitmask) const;
 
 		template<typename T>
@@ -56,16 +56,18 @@ namespace DarkDescent
 
 		GameObjectHandle* getGameObjectHandle(const Entity& entity);
 
-		const ArchArm& getNext(const Component& component);
-		const ArchArm& getPrev(const Component& component);
+		const ArchArm& getNext(const ComponentInfo& component);
+		const ArchArm& getPrev(const ComponentInfo& component);
 
-		const ComponentOffset& getComponentOffset(const Component& component) const;
+		const ComponentOffset& getComponentOffset(const ComponentInfo& component) const;
 		const ComponentOffset& getComponentOffset(std::size_t bitmask) const;
+
+		inline ArchManager& archManager() const { return archManager_; } 
 
 	private:
 		ArchManager& archManager_;
 		ArchBufferPool bufferPool_;
-		std::vector<Component*> components_;
+		std::vector<ComponentInfo*> components_;
 		std::vector<ComponentOffset> offsets_;
 		std::vector<ArchArm*> next_;
 		std::vector<ArchArm*> prev_;
