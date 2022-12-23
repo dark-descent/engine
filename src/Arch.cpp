@@ -2,6 +2,7 @@
 #include "ComponentInfo.hpp"
 #include "TraceException.hpp"
 #include "ArchManager.hpp"
+#include "GameObject.hpp"
 
 namespace DarkDescent
 {
@@ -35,6 +36,11 @@ namespace DarkDescent
 		}
 	}
 
+	GameObjectHandle* Arch::getGameObject(const Entity& entity)
+	{
+		return bufferPool_.getGameObject(entity);
+	}
+
 	std::size_t Arch::getComponentOffset(const ComponentInfo& component)
 	{
 		std::size_t i = 0;
@@ -63,16 +69,22 @@ namespace DarkDescent
 		return arch;
 	}
 
-	void* Arch::getComponent(const Entity& entity, const ComponentInfo& component)
+	char* Arch::getComponent(const Entity& entity, const ComponentInfo& component)
 	{
 		return bufferPool_.getRaw(entity) + getComponentOffset(component);
 	}
 
-
 	Entity Arch::copyEntityFrom(Arch& arch, const Entity& entity)
 	{
 		const Entity e = allocEntity();
-		// TODO
+		char* baseFrom = arch.bufferPool_.getRaw(entity);
+		char* baseTo = bufferPool_.getRaw(e);
+		for(const auto& component : arch.components_)
+		{
+			const auto offsetFrom = arch.getComponentOffset(*component);
+			const auto offsetTo = getComponentOffset(*component);
+			memcpy(baseTo + offsetTo, baseFrom + offsetFrom, component->size);
+		}
 		return e;
 	}
 

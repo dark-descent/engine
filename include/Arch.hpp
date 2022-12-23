@@ -2,12 +2,16 @@
 
 #include "pch.hpp"
 #include "ArchBufferPool.hpp"
+#include "PersistentAllocator.hpp"
 
 namespace DarkDescent
 {
 	struct Entity;
 	class ComponentInfo;
 	class ArchManager;
+	class GameObject;
+
+	using GameObjectHandle = PersistentAllocator<GameObject>::Handle;
 
 	class Arch
 	{
@@ -17,10 +21,7 @@ namespace DarkDescent
 	public:
 		Arch(ArchManager& manager, std::vector<const ComponentInfo*> components);
 
-		inline GameObjectHandle* getGameObject(const Entity& entity)
-		{
-			return bufferPool_.getGameObject(entity);
-		}
+		GameObjectHandle* getGameObject(const Entity& entity);
 
 		/**
 		 * @brief Gets a component that belongs to an entity.
@@ -29,7 +30,7 @@ namespace DarkDescent
 		 * @param component The component to fetch.
 		 * @return void* a pointer to the components data.
 		 */
-		void* getComponent(const Entity& entity, const ComponentInfo& component);
+		char* getComponent(const Entity& entity, const ComponentInfo& component);
 
 		/**
 		 * @brief Adds a component to an entity.

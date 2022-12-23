@@ -1,6 +1,8 @@
 #pragma once
 
+#include "pch.hpp"
 #include "ComponentInfo.hpp"
+#include "Hash.hpp"
 
 namespace DarkDescent
 {
@@ -13,10 +15,12 @@ namespace DarkDescent
 		template<typename T>
 		inline const ComponentInfo& registerComponent()
 		{
-			return components_.emplace_back(sizeof(T), components_.size());
+			const auto h = Hasher::hash(typeid(T).name());
+			components_.insert({h, ComponentInfo(sizeof(T), components_.size())});
+			return components_.at(h);
 		}
 
 	private:
-		std::vector<ComponentInfo> components_;
+		std::unordered_map<Hash, ComponentInfo> components_;
 	};
 }

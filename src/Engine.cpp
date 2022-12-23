@@ -4,9 +4,9 @@
 #include "js/Helpers.hpp"
 #include "Utils.hpp"
 #include "js/Format.hpp"
-#include "GameObjectComponent.hpp"
 #include "Arch.hpp"
 #include "GameObject.hpp"
+#include "TransformComponent.hpp"
 
 namespace DarkDescent
 {
@@ -55,16 +55,16 @@ namespace DarkDescent
 		{
 			auto json = env.readJsonFile(gameJsonPath).ToLocalChecked();
 
-			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
-			{
-				if (obj.IsEmpty())
-					obj = json;
-				return JS::getFromObject(env, obj, key);
-			};
-	
-			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
-	
-			config.name = JS::parseString(env, read("name").ToLocalChecked());
+		auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+		{
+			if (obj.IsEmpty())
+				obj = json;
+			return JS::getFromObject(env, obj, key);
+		};
+
+		Logger::get().debug("Game json: ", JS::Format::parse(env, json));
+
+		config.name = JS::parseString(env, read("name").ToLocalChecked());
 		});
 
 		instance_.emplace(new Engine(std::move(config)));
@@ -133,9 +133,41 @@ namespace DarkDescent
 	{
 		windowManager_.createWindow(config.name);
 
+		struct TestA
+		{
+			float x;
+			float y;
+			float z;
+		};
+
+		struct TestB
+		{
+			char str[10];
+		};
+
+		const ComponentInfo& transform = componentManager_.registerComponent<Transform>();
+		const ComponentInfo& testA = componentManager_.registerComponent<TestA>();
+		const ComponentInfo& testB = componentManager_.registerComponent<TestB>();
+
 		auto& a = gameObjectManager_.create();
 		auto& b = gameObjectManager_.create();
 		auto& c = gameObjectManager_.create();
+
+		auto& t = a.addComponent<Transform>(transform);
+		t.x = 1.0f;
+		t.y = 2.0f;
+
+		TestA& ta = a.addComponent<TestA>(testA);
+		ta.x = 44.0f;
+		ta.y = 45.0f;
+		ta.z = 46.0f;
+
+		auto& tb = a.addComponent<TestB>(testB);
+
+		t = a.getComponent<Transform>(transform);
+		ta = a.getComponent<TestA>(testA);
+
+		
 
 		windowManager_.enterEventLoop();
 	}

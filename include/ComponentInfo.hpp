@@ -15,9 +15,9 @@ namespace DarkDescent
 			return bitmask;
 		}
 
-		const std::size_t size;
-		const std::size_t index;
-		const std::size_t bitmask;
+		std::size_t size;
+		std::size_t index;
+		std::size_t bitmask;
 
 		ComponentInfo(std::size_t size, std::size_t index):
 			size(size),
