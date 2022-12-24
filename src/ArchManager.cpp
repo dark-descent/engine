@@ -29,6 +29,7 @@ namespace DarkDescent
 				c.emplace_back(std::addressof(component));
 			}
 		}
+		
 		arches_.emplace(std::piecewise_construct, std::forward_as_tuple(bitmask), std::forward_as_tuple(*this, bitmask, size, std::move(c)));
 	}
 

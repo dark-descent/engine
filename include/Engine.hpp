@@ -6,6 +6,7 @@
 #include "SubSystem.hpp"
 #include "Config.hpp"
 #include "TraceException.hpp"
+#include "EventManager.hpp"
 
 namespace DarkDescent
 {
@@ -33,10 +34,10 @@ namespace DarkDescent
 
 			assert(!subSystems_.contains(hash));
 
-			T* subSystem = new T(*this);
+			T* subSystem = new T(name, *this);
 			subSystems_.emplace(hash, subSystem);
 			initializationOrder_.emplace_back(subSystem);
-			subSystem->initialize(name);
+			subSystem->initialize();
 		}
 
 	public:
@@ -48,7 +49,7 @@ namespace DarkDescent
 			const char* name = typeid(T).name();
 			Hash hash = Hasher::hash(name);
 
-			if(!subSystems_.contains(hash))
+			if (!subSystems_.contains(hash))
 			{
 				std::string error = std::format("Could not get subsystem for type {}!", name);
 				throw TraceException(error.c_str());
@@ -61,8 +62,10 @@ namespace DarkDescent
 		const std::thread::id mainThreadID;
 		const Logger& logger;
 		const Config config;
+		const EventManager eventManager;
 
 	private:
+		
 		std::unordered_map<Hash, SubSystem*> subSystems_;
 		std::vector<SubSystem*> initializationOrder_;
 	};

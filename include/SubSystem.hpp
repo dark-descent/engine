@@ -4,8 +4,9 @@
 CLASS_NAME(const CLASS_NAME&) = delete; \
 CLASS_NAME(CLASS_NAME&&) = delete; \
 virtual ~CLASS_NAME() { } \
-CLASS_NAME(const Engine& engine): SubSystem(engine)
+CLASS_NAME(const char* name, const Engine& engine): SubSystem(name, engine)
 
+#include "EventManager.hpp"
 
 namespace DarkDescent
 {
@@ -14,17 +15,25 @@ namespace DarkDescent
 	class SubSystem
 	{
 	protected:
-		SubSystem(const Engine& engine);
+		SubSystem(const char* name, const Engine& engine);
 		SubSystem(const SubSystem&) = delete;
 		SubSystem(SubSystem&&) = delete;
 		virtual ~SubSystem() = 0;
 
 	protected:
-		void initialize(const char* name);
+		void initialize();
 		void terminate();
 
 		virtual void onInitialize();
 		virtual void onTerminate();
+
+		void emitEvent(const char* name, const void* data = nullptr);
+		void addEventHandler(const char* name, EventHandler eventHandler, const void* data = nullptr);
+		void removeEventHandler(const char* name, EventHandler eventHandler);
+
+		void emitEvent(Hash name, const void* data = nullptr);
+		void addEventHandler(Hash name, EventHandler eventHandler, const void* data = nullptr);
+		void removeEventHandler(Hash name, EventHandler eventHandler);
 
 	private:
 		std::string name_;

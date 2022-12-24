@@ -10,6 +10,7 @@
 #include "ArchManager.hpp"
 #include "GameObjectManager.hpp"
 #include "Component.hpp"
+#include "RenderSystem.hpp"
 
 namespace DarkDescent
 {
@@ -101,6 +102,7 @@ namespace DarkDescent
 		logger(Logger::get()),
 		config(config),
 		mainThreadID(std::this_thread::get_id()),
+		eventManager(),
 		subSystems_(),
 		initializationOrder_()
 	{
@@ -111,8 +113,7 @@ namespace DarkDescent
 		initializeSubSystem<GameObjectManager>();
 		initializeSubSystem<ScriptManager>();
 		initializeSubSystem<WindowManager>();
-
-
+		initializeSubSystem<RenderSystem>();
 
 		logger.info("Engine initialized!");
 	}
@@ -158,57 +159,8 @@ namespace DarkDescent
 	void Engine::run()
 	{
 		WindowManager* wm = getSubSystem<WindowManager>();
-		ArchManager* am = getSubSystem<ArchManager>();
-		GameObjectManager* gm = getSubSystem<GameObjectManager>();
-
-		am->registerComponent<A>();
-		am->registerComponent<B>();
-		am->registerComponent<Transform>();
-
-		std::vector<GameObject*> gos;
-
-		for (std::size_t n = 0; n < 100; n++)
-		{
-			for (std::size_t i = 0; i < 1024; i++)
-			{
-				GameObject* o = gm->create();
-				o->addComponent<Transform>(i * 2.0f * n, i * 3.0f * n);
-
-				// Transform& t = *o->getComponent<Transform>();
-
-				// logger.info(t);
-
-				gos.emplace_back(o);
-			}
-		}
-
-		std::size_t i = 0;
-		for (auto& o : gos)
-		{
-			i++;
-			o->addComponent<B>(3 * i, 3 * i);
-		}
-
-		for (auto& o : gos)
-		{
-			i++;
-			o->addComponent<A>(2 * i);
-		}
-
-		// i = 0;
-		// for (auto& o : gos)
-		// {
-		// 	if (i % 123 == 0)
-		// 	{
-		// 		A& a = *o->getComponent<A>();
-		// 		B& b = *o->getComponent<B>();
-		// 		Transform& t = *o->getComponent<Transform>();
-		// 		// logger.info(a, b, t);
-		// 	}
-		// }
 
 		wm->createWindow(config.name);
-
 		wm->enterEventLoop();
 	}
 }

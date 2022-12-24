@@ -1,4 +1,5 @@
 #include "WindowManager.hpp"
+#include "Logger.hpp"
 #include "TraceException.hpp"
 
 namespace DarkDescent
@@ -10,29 +11,47 @@ namespace DarkDescent
 
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 			throw TraceException(SDL_GetError());
+
+		SDL_AddEventWatch(eventWatcher, this);
 	}
 
 	void WindowManager::onTerminate()
 	{
-		for (auto& w : windows_)
-			SDL_DestroyWindow(w.window);
+		windows_.foreach([](Window& window, std::size_t index) { window.destroy(); });
 
 		windows_.clear();
 
 		SDL_Quit();
 	}
 
-	void WindowManager::createWindow(const std::string& title, int width, int height)
+	int WindowManager::eventWatcher(void* data, SDL_Event* event)
 	{
-		auto& w = windows_.emplace_back();
-		w.window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
-		if (w.window == nullptr)
-			throw TraceException(SDL_GetError());
+		if (event->type == SDL_WINDOWEVENT)
+		{
+			switch (event->window.event)
+			{
+				case SDL_WINDOWEVENT_RESIZED:
+				{
+					WindowManager& wm = *static_cast<WindowManager*>(data);
+					Window& w = wm.getWindowFromID(event->window.windowID);
+					w.width_ = event->window.data1;
+					w.height_ = event->window.data2;
+					wm.emitEvent(Hasher::hash("WINDOW_RESIZED"), std::addressof(w));
+				}
+				break;
+			}
 
-		w.screenSurface = SDL_GetWindowSurface(w.window);
+		}
+		return 0;
+	}
 
-		SDL_FillRect(w.screenSurface, NULL, SDL_MapRGB(w.screenSurface->format, 0xFF, 0xFF, 0xFF));
-		SDL_UpdateWindowSurface(w.window);
+	std::size_t WindowManager::createWindow(const std::string& title, int width, int height)
+	{
+		const std::size_t index = windows_.getNextIndex();
+		Window& w = windows_.emplace_back(index, Window::Config{ .title = title });
+		idToIndexMap_.insert({ SDL_GetWindowID(w.sdlWindow_), index });
+		emitEvent(Hasher::hash("WINDOW_CREATED"), &index);
+		return index;
 	}
 
 	void WindowManager::enterEventLoop()
@@ -42,11 +61,37 @@ namespace DarkDescent
 		SDL_Event e;
 		while (isRunning_)
 		{
-			while (SDL_PollEvent(&e))
+			SDL_WaitEventTimeout(&e, 15);
+
+			do
 			{
-				if (e.type == SDL_QUIT)
-					isRunning_ = false;
-			}
+				switch (e.type)
+				{
+					case SDL_QUIT:
+					{
+						isRunning_ = false;
+					}
+					break;
+					case SDL_WINDOWEVENT:
+					{
+						switch (e.window.event)
+						{
+							case SDL_WINDOWEVENT_CLOSE:
+							{
+								// emitEvent(Hasher::hash("WINDOW_DESTROY"), std::addressof(windows_.at(e.window.windowID)));
+							}
+							break;
+						}
+					}
+					break;
+				}
+			} while (SDL_PollEvent(&e));
+
+			windows_.foreach([ & ](Window& window, std::size_t index)
+			{
+				if (!window.isDestroyed())
+					emitEvent(Hasher::hash("RENDER"), &index);
+			});
 		}
 	}
 }
