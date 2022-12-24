@@ -7,7 +7,9 @@ namespace DarkDescent
 		index_(index),
 		sdlWindow_(SDL_CreateWindow(config.title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config.width, config.height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL)),
 		screenSurface_(SDL_GetWindowSurface(sdlWindow_)),
-		isDestroyed_(false)
+		isDestroyed_(false),
+		width_(config.width),
+		height_(config.height)
 	{
 		if (sdlWindow_ == nullptr)
 			throw TraceException("Could not create window!");

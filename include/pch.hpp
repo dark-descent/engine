@@ -59,6 +59,7 @@
 
 
 // ------------  SDL, OpenGL, V8 ------------- //
+#include <glew.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <GL/gl.h>

@@ -17,5 +17,8 @@ namespace DarkDescent
 		Window* window_;
 		SDL_Renderer* sdlRenderer_;
 		SDL_GLContext context_;
+
+		GLuint vertexArrayID_;
+		GLuint vertexbuffer_;
 	};
 }

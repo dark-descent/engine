@@ -10,8 +10,8 @@ namespace DarkDescent
 		addEventHandler(hash, [](SubSystem* self, const Event& event, const void* data)
 		{
 			RenderSystem& system = *static_cast<RenderSystem*>(self);
-			EventCallback callback = reinterpret_cast<EventCallback>(data);
-			callback(system, event);
+		EventCallback callback = reinterpret_cast<EventCallback>(data);
+		callback(system, event);
 		}, callback);
 	}
 
@@ -19,6 +19,7 @@ namespace DarkDescent
 	{
 		handleEvent(Hasher::hash("WINDOW_CREATED"), onCreate);
 		handleEvent(Hasher::hash("WINDOW_DESTROY"), onDestroy);
+		handleEvent(Hasher::hash("WINDOW_RESIZED"), onRender);
 		handleEvent(Hasher::hash("RENDER"), onRender);
 	}
 
@@ -36,7 +37,6 @@ namespace DarkDescent
 
 	void RenderSystem::onDestroy(RenderSystem& system, const Event& event)
 	{
-		// Window* w = static_cast<Window*>(event.data);
 		Logger::get().info("Window destroy!");
 	}
 

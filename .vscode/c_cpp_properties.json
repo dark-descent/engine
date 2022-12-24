@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/include/**",
                 "${workspaceFolder}/dependencies/win/SDL2/include/**",
-				"${workspaceFolder}/dependencies/win/v8/include/**"
+				"${workspaceFolder}/dependencies/win/v8/include/**",
+				"${workspaceFolder}/dependencies/win/glew/include/GL/**"
             ],
             "defines": [
                 "_DEBUG",
