@@ -21,7 +21,7 @@ namespace DarkDescent
 		static bool terminate();
 
 	private:
-		Engine(Config&&);
+		Engine(Config&&, std::filesystem::path&&);
 		Engine(const Engine&) = delete;
 		Engine(Engine&&) = delete;
 		~Engine();
@@ -59,6 +59,7 @@ namespace DarkDescent
 		}
 
 	public:
+		const std::filesystem::path gamePath;
 		const std::thread::id mainThreadID;
 		const Logger& logger;
 		const Config config;

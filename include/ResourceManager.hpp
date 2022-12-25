@@ -16,15 +16,14 @@ namespace DarkDescent
 		virtual void onTerminate() override;
 
 	public:
-		template<typename T>
-		const T& getResource(const char* path)
+		const Resource& getResource(const char* path)
 		{
 			Hash hash = Hasher::hash(path);
 			if (!resources_.contains(hash))
-				resources_.emplace(hash, T(path));
-			T& resource = resources_.at(hash);
+				resources_.emplace(hash, Resource(path));
+			Resource* resource = &resources_.at(hash);
 			pendingResources_.emplace_back(resource);
-			return resource;
+			return *resource;
 		}
 
 		void loadResources();

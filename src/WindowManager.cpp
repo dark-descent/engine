@@ -1,6 +1,8 @@
 #include "WindowManager.hpp"
 #include "Logger.hpp"
 #include "TraceException.hpp"
+#include "Engine.hpp"
+#include "ScriptManager.hpp"
 
 namespace DarkDescent
 {
@@ -13,6 +15,10 @@ namespace DarkDescent
 			throw TraceException(SDL_GetError());
 
 		SDL_AddEventWatch(eventWatcher, this);
+
+		// ScriptManager* sm = engine_.getSubSystem<ScriptManager>();
+	
+		// sm->exposeGlobal();
 	}
 
 	void WindowManager::onTerminate()

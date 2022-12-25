@@ -23,7 +23,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	try
 	{
-		auto& engine = Engine::initialize("../../../game.json");
+		auto& engine = Engine::initialize("../../../test-game/game.json");
 
 		engine.run();
 

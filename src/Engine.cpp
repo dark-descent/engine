@@ -59,19 +59,19 @@ namespace DarkDescent
 		{
 			auto json = env.readJsonFile(gameJsonPath).ToLocalChecked();
 
-		auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
-		{
-			if (obj.IsEmpty())
-				obj = json;
-			return JS::getFromObject(env, obj, key);
-		};
+			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+			{
+				if (obj.IsEmpty())
+					obj = json;
+				return JS::getFromObject(env, obj, key);
+			};
 
-		Logger::get().debug("Game json: ", JS::Format::parse(env, json));
+			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
 
-		config.name = JS::parseString(env, read("name").ToLocalChecked());
+			config.name = JS::parseString(env, read("name").ToLocalChecked());
 		});
-
-		instance_.emplace(new Engine(std::move(config)));
+		std::filesystem::path p = (gameJsonPath / "..").lexically_normal();
+		instance_.emplace(new Engine(std::move(config), std::move(p)));
 		return *(instance_.value());
 	}
 
@@ -88,7 +88,6 @@ namespace DarkDescent
 		if (!instance_.has_value())
 			throw TraceException("Engine is not initialized!");
 
-
 		Engine* engine = instance_.value();
 		delete engine;
 		instance_.reset();
@@ -98,9 +97,10 @@ namespace DarkDescent
 		return true;
 	}
 
-	Engine::Engine(Config&& config):
+	Engine::Engine(Config&& config, std::filesystem::path&& gamePath):
 		logger(Logger::get()),
 		config(config),
+		gamePath(gamePath),
 		mainThreadID(std::this_thread::get_id()),
 		eventManager(),
 		subSystems_(),
@@ -133,34 +133,13 @@ namespace DarkDescent
 		logger.info("Engine terminated!");
 	}
 
-	struct A: public Component<A>
-	{
-		A(std::size_t a = 0): Component(), a(a) { }
-		std::size_t a;
-
-		std::string log()
-		{
-			return std::format("struct A\n  a = {}", a);
-		}
-	};
-
-	struct B: public Component<B>
-	{
-		B(std::size_t x = 0, std::size_t y = 0): Component(), x(x), y(y) { }
-		std::size_t x;
-		std::size_t y;
-
-		std::string log()
-		{
-			return std::format("struct B\n  x = {}\n  y = {}", x, y);
-		}
-	};
-
 	void Engine::run()
 	{
 		WindowManager* wm = getSubSystem<WindowManager>();
+		ScriptManager* sm = getSubSystem<ScriptManager>();
 
-		wm->createWindow(config.name);
-		wm->enterEventLoop();
+		sm->mainEnv().run([](const JS::Env& env) { 
+			env.loadEntryModule("index.js");
+		});
 	}
 }
