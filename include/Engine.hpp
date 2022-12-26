@@ -16,7 +16,7 @@ namespace DarkDescent
 		static std::optional<Engine*> instance_;
 
 	public:
-		static Engine& initialize(const char* gamePath = nullptr);
+		static Engine& initialize(std::vector<const char*>&& args);
 		static Engine& getInstance();
 		static bool terminate();
 

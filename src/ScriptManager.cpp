@@ -36,4 +36,12 @@ namespace DarkDescent
 			delete env;
 		envs_.clear();
 	}
+
+	void ScriptManager::initializeGame()
+	{
+		mainEnv().run([&](const JS::Env& env)
+		{
+			env.moduleLoader_.loadEntryModule(engine_.config.entry);
+		});
+	}
 }

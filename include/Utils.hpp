@@ -35,5 +35,6 @@ namespace DarkDescent
 		}
 
 		const std::filesystem::path& getExecutablePath();
+		const std::filesystem::path& getExecutableDir();
 	}
 }

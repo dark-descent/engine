@@ -1,6 +1,7 @@
 #include "pch.hpp"
 
 #include "Logger.hpp"
+#include "Utils.hpp"
 
 namespace DarkDescent
 {
@@ -72,7 +73,7 @@ namespace DarkDescent
 			if (path != nullptr)
 				logDir_ = path;
 			else
-				logDir_ = std::filesystem::current_path() / "logs";
+				logDir_ = Utils::getExecutablePath() / ".." / "logs";
 
 			if (!std::filesystem::exists(logDir_))
 				std::filesystem::create_directory(logDir_);

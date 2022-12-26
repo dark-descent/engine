@@ -37,6 +37,8 @@ namespace DarkDescent
 		virtual void onTerminate() override;
 	public:
 		inline JS::Env& mainEnv() const { return *(envs_.at(0)); }
+		
+		void initializeGame();
 
 		void exposeGlobal();
 

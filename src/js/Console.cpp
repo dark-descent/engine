@@ -139,9 +139,23 @@ namespace DarkDescent
 				Logger::get().info(str);
 			}
 
-			JS_CALLBACK(log)
+			void logException(const Env& env, v8::Local<v8::Value> val)
 			{
-				// const Env& env = Env::fromIsolate(args.GetIsolate());
+				JS::Object e(env, val);
+				JS::Object exception(env);
+				// exception.set("name", e["name"].ToLocalChecked());
+				// exception.set("message", e["message"].ToLocalChecked());
+				exception.set("stack", e["stack"].ToLocalChecked());
+				
+				std::string str = parse(env, *exception);
+				const size_t l = str.size();
+				if (str.c_str()[l] == '\n')
+					str.data()[l] = '\0';
+				Logger::get().info(str);
+			}
+
+			std::string getLogString(const Env& env, const v8::FunctionCallbackInfo<v8::Value> & args)
+			{
 				const int length = args.Length();
 
 				std::string logString;
@@ -159,7 +173,25 @@ namespace DarkDescent
 						logString += ", ";
 				}
 
-				Logger::get().info(logString);
+				return logString;
+			}
+
+			JS_CALLBACK(log)
+			{
+				const std::string str = getLogString(env, args);
+				Logger::get().info(str);
+			}
+
+			JS_CALLBACK(warn)
+			{
+				const std::string str = getLogString(env, args);
+				Logger::get().warn(str);
+			}
+
+			JS_CALLBACK(error)
+			{
+				const std::string str = getLogString(env, args);
+				Logger::get().error(str);
 			}
 
 			JS_CALLBACK(clear)
@@ -189,6 +221,8 @@ namespace DarkDescent
 			{
 				auto console = JS::Object(env);
 				console.set("log", Console::log);
+				console.set("warn", Console::warn);
+				console.set("error", Console::error);
 				console.set("clear", Console::clear);
 				global.set("console", *console);
 			}

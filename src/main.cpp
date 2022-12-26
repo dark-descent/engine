@@ -16,14 +16,23 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	setupWinConsole();
 #endif
 
-	if (!Logger::initialize(std::filesystem::current_path() / ".." / ".." / ".." / "logs"))
+	int returnCode = 0;
+
+	if (!Logger::initialize())
 		return 1;
 
 	const Logger& logger = Logger::get();
+	
+	logger.info("Logger initialized!");
 
 	try
 	{
-		auto& engine = Engine::initialize("../../../test-game/game.json");
+		std::vector<const char*> args;
+
+		for(int i = 0; i < argc; i++)
+			args.emplace_back(argv[i]);
+
+		auto& engine = Engine::initialize(std::move(args));
 
 		engine.run();
 
@@ -32,7 +41,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	catch (const TraceException& e)
 	{
 		logger.exception(e);
-		return 2;
+		returnCode = 2;
 	}
 
 #if defined(_DEBUG) && defined(_WIN32)
@@ -43,7 +52,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	Logger::terminate();
 
-	return 0;
+	return returnCode;
 }
 
 #if defined(_DEBUG) && defined(_WIN32)

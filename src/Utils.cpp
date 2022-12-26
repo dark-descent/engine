@@ -60,5 +60,11 @@ namespace DarkDescent
 			static std::filesystem::path execPath = getExecPathNative();
 			return execPath;
 		}
+
+		const std::filesystem::path& getExecutableDir()
+		{
+			static std::filesystem::path execDir = (getExecutablePath() / "..").lexically_normal();
+			return execDir;
+		}
 	}
 }

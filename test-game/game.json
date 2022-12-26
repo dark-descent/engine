@@ -1,4 +1,4 @@
 {
 	"name": "Dark Descent",
-	"entry": "index.js"
+	"entry": "dist/index.js"
 }

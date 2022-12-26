@@ -16,28 +16,30 @@ namespace DarkDescent
 {
 	std::optional<Engine*> Engine::instance_;
 
-	Engine& Engine::initialize(const char* gamePath_)
+	Engine& Engine::initialize(std::vector<const char*>&& args)
 	{
 		if (instance_.has_value())
 			throw TraceException("Engine is already initialized!");
 
-		std::string gamePath;
+		std::filesystem::path gamePath;
 		std::filesystem::path gameJsonPath;
+		
+		const std::size_t count = args.size();
 
-		if (gamePath_ == nullptr)
+		if (count <= 1 || std::string(args.at(1)).starts_with("-"))
 		{
 			gamePath = "game.json";
 		}
 		else
 		{
-			gamePath = gamePath_;
+			gamePath = args.at(1);
 		}
 
-		if (gameJsonPath.is_relative())
+		if (gamePath.is_relative())
 		{
 			std::vector<std::filesystem::path> checkPaths = {
 				std::filesystem::current_path(),
-				Utils::getExecutablePath() / ".."
+				Utils::getExecutableDir()
 			};
 
 			for (auto& path : checkPaths)
@@ -69,7 +71,9 @@ namespace DarkDescent
 			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
 
 			config.name = JS::parseString(env, read("name").ToLocalChecked());
+			config.entry = JS::parseString(env, read("entry").ToLocalChecked());
 		});
+
 		std::filesystem::path p = (gameJsonPath / "..").lexically_normal();
 		instance_.emplace(new Engine(std::move(config), std::move(p)));
 		return *(instance_.value());
@@ -138,8 +142,6 @@ namespace DarkDescent
 		WindowManager* wm = getSubSystem<WindowManager>();
 		ScriptManager* sm = getSubSystem<ScriptManager>();
 
-		sm->mainEnv().run([](const JS::Env& env) { 
-			env.loadEntryModule("index.js");
-		});
+		sm->initializeGame();
 	}
 }

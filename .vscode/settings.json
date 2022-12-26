@@ -85,6 +85,7 @@
 	},
 	"cmake.debugConfig": {
 		"args": [
+			"../../../test-game/game.json",
 			"-test1",
 			"-test2"
 		]
