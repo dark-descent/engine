@@ -143,8 +143,6 @@ namespace DarkDescent
 			{
 				JS::Object e(env, val);
 				JS::Object exception(env);
-				// exception.set("name", e["name"].ToLocalChecked());
-				// exception.set("message", e["message"].ToLocalChecked());
 				exception.set("stack", e["stack"].ToLocalChecked());
 				
 				std::string str = parse(env, *exception);

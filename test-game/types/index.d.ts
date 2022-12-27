@@ -1,4 +1,5 @@
 /// <reference path="./Console.d.ts" />
+/// <reference path="./Engine.d.ts" />
 
 declare interface IEntry
 {

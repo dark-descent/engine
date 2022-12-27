@@ -1,6 +1,26 @@
-const entry: IEntry = (args) =>
+class Game extends Engine.Game
 {
-	console.log("Hello js!", ...args);
+	protected initialize(config: Engine.IConfig)
+	{
+
+	}
+
+	protected onLoad()
+	{
+	
+	}
+	
+	protected onTerminate()
+	{
+	
+	}
+}
+
+const entry: IEntry = async (args) =>
+{
+	const game = await Engine.initialize(Game);
+
+	game.start();
 };
 
 export default entry;
