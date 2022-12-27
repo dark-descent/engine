@@ -21,7 +21,7 @@ namespace DarkDescent
 		static bool terminate();
 
 	private:
-		Engine(Config&&, std::filesystem::path&&);
+		Engine(Config&&, std::filesystem::path&&, std::vector<const char*>&&);
 		Engine(const Engine&) = delete;
 		Engine(Engine&&) = delete;
 		~Engine();
@@ -64,9 +64,9 @@ namespace DarkDescent
 		const Logger& logger;
 		const Config config;
 		const EventManager eventManager;
+		const std::vector<const char*> gameArgs;
 
 	private:
-		
 		std::unordered_map<Hash, SubSystem*> subSystems_;
 		std::vector<SubSystem*> initializationOrder_;
 	};

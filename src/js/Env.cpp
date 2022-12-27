@@ -4,26 +4,27 @@
 #include "js/Object.hpp"
 #include "Engine.hpp"
 #include "js/Helpers.hpp"
+#include "js/Process.hpp"
 
 namespace DarkDescent::JS
 {
-	Env Env::create()
+	Env Env::create(const bool standAlone)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		return Env(std::move(params));
+		return Env(std::move(params), standAlone);
 	}
 
-	Env* Env::createNew()
+	Env* Env::createNew(const bool standAlone)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		return new Env(std::move(params));
+		return new Env(std::move(params), standAlone);
 	}
 
-	Env::Env(v8::Isolate::CreateParams&& createParams):
+	Env::Env(v8::Isolate::CreateParams&& createParams, const bool isStandAloneEnv):
 		createParams_(createParams),
 		isolate_(v8::Isolate::New(createParams_)),
 		moduleLoader_(*this)
@@ -44,7 +45,12 @@ namespace DarkDescent::JS
 		v8::Context::Scope contextScope(ctx);
 
 		JS::Object global(*this, ctx->Global());
+
 		JS::Console::expose(*this, global);
+		if(!isStandAloneEnv)
+		{
+			JS::Process::expose(*this, global);
+		}
 	}
 
 	Env::~Env()

@@ -1,5 +1,4 @@
-console.log("test");
 const entry = (args) => {
-    console.log("Hello js!");
+    console.log("Hello js!", ...args);
 };
 export default entry;

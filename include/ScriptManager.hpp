@@ -24,9 +24,8 @@ namespace DarkDescent
 			if (!isV8Initialized())
 				initializeV8();
 
-			JS::Env* env = JS::Env::createNew();
-			env->run(callback);
-			delete env;
+			JS::Env env = JS::Env::create(true);
+			env.run(callback);
 		}
 
 	protected:

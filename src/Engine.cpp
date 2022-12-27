@@ -25,14 +25,17 @@ namespace DarkDescent
 		std::filesystem::path gameJsonPath;
 		
 		const std::size_t count = args.size();
+		std::vector<const char*> gameArgs;
 
 		if (count <= 1 || std::string(args.at(1)).starts_with("-"))
 		{
 			gamePath = "game.json";
+			gameArgs = std::vector<const char*>(args.begin() + 1, args.end());
 		}
 		else
 		{
 			gamePath = args.at(1);
+			gameArgs = std::vector<const char*>(args.begin() + 2, args.end());
 		}
 
 		if (gamePath.is_relative())
@@ -75,7 +78,8 @@ namespace DarkDescent
 		});
 
 		std::filesystem::path p = (gameJsonPath / "..").lexically_normal();
-		instance_.emplace(new Engine(std::move(config), std::move(p)));
+		
+		instance_.emplace(new Engine(std::move(config), std::move(p), std::move(gameArgs)));
 		return *(instance_.value());
 	}
 
@@ -101,12 +105,13 @@ namespace DarkDescent
 		return true;
 	}
 
-	Engine::Engine(Config&& config, std::filesystem::path&& gamePath):
+	Engine::Engine(Config&& config, std::filesystem::path&& gamePath, std::vector<const char*>&& gameArgs):
 		logger(Logger::get()),
 		config(config),
 		gamePath(gamePath),
 		mainThreadID(std::this_thread::get_id()),
 		eventManager(),
+		gameArgs(gameArgs),
 		subSystems_(),
 		initializationOrder_()
 	{

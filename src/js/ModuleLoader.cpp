@@ -174,7 +174,7 @@ namespace DarkDescent::JS
 
 		std::string entry = p + ".native.entry";
 
-		std::string code = std::format("import entry from \"{}\"; {}", p, "entry();");
+		std::string code = std::format("import entry from \"{}\"; {}", p, "entry(process.args);");
 
 		if(instantiateModule(p, code, entry).IsEmpty())
 			throw TraceException("Could not instantiate entry module!");

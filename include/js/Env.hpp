@@ -25,15 +25,15 @@ namespace DarkDescent
 				const v8::Context::Scope contextScope_;
 			};
 
-			static Env create();
-			static Env* createNew();
+			static Env create(const bool standAlone = false);
+			static Env* createNew(const bool standAlone = false);
 
 			static inline const Env& fromIsolate(v8::Isolate* isolate) { return *static_cast<Env*>(isolate->GetData(0)); }
 			static inline const Env& fromContext(v8::Local<v8::Context> ctx) { return fromIsolate(ctx->GetIsolate()); }
 			static inline const Env& fromArgs(const v8::FunctionCallbackInfo<v8::Value>& args) { return fromIsolate(args.GetIsolate()); }
 
 		private:
-			Env(v8::Isolate::CreateParams&& createParams);
+			Env(v8::Isolate::CreateParams&& createParams, const bool isStandAloneEnv = false);
 			Env(const Env&) = delete;
 			Env(Env&&) = delete;
 
