@@ -8,8 +8,6 @@
 
 namespace DarkDescent::JS
 {
-	using namespace v8;
-
 	ModuleLoader::ModuleLoader(const Env& env):
 		env(env),
 		checkPaths_(),
@@ -62,7 +60,7 @@ namespace DarkDescent::JS
 				".tsx",
 				"json"
 			};
-			
+
 			for (const std::string& t : resolves)
 			{
 				std::filesystem::path checkPath = importPath;
@@ -98,13 +96,11 @@ namespace DarkDescent::JS
 		return v8::MaybeLocal<v8::Module>(module);
 	}
 
-	v8::MaybeLocal<v8::Module> ModuleLoader::loadJsonModule(const char* filePath) const
+	v8::MaybeLocal<v8::Module> ModuleLoader::loadJsonModule(const std::filesystem::path& filePath) const
 	{
-		using namespace v8;
+		v8::TryCatch tryCatcher(env.isolate());
 
-		TryCatch tryCatcher(env.isolate());
-
-		const std::string path(filePath);
+		const std::string path = filePath.string();
 
 		if (modules_.contains(path))
 			return v8::MaybeLocal<v8::Module>();
@@ -114,19 +110,19 @@ namespace DarkDescent::JS
 
 		std::vector<v8::Local<v8::String>> exports({ JS::string(env, "default") });
 
-		Local<Module> module = Module::CreateSyntheticModule(env.isolate(), JS::string(env, filePath), exports, [](Local<Context> context, Local<Module> module)
+		v8::Local<v8::Module> module =v8::Module::CreateSyntheticModule(env.isolate(), JS::string(env, path), exports, [](v8::Local<v8::Context> context, v8::Local<v8::Module> module)
 		{
 			Env& env = *static_cast<Env*>(context->GetIsolate()->GetData(0));
 			module->SetSyntheticModuleExport(context->GetIsolate(), v8::String::NewFromUtf8(context->GetIsolate(), "default").ToLocalChecked(), env.moduleLoader().getJsonData(module->GetIdentityHash()).ToLocalChecked());
-			return MaybeLocal<Value>(v8::True(env.isolate()));
+			return v8::MaybeLocal<v8::Value>(v8::True(env.isolate()));
 		});
 
-		Local<Value> json = v8::JSON::Parse(env.context(), JS::string(env, jsonString)).ToLocalChecked();
+		v8::Local<v8::Value> json = v8::JSON::Parse(env.context(), JS::string(env, jsonString)).ToLocalChecked();
 
-		jsonModules_.emplace(module->GetIdentityHash(), new Persistent<Value>(env.isolate(), json));
-		modules_.emplace(path, new Persistent<Module>(env.isolate(), module));
+		jsonModules_.emplace(module->GetIdentityHash(), new v8::Persistent<v8::Value>(env.isolate(), json));
+		modules_.emplace(path, new v8::Persistent<v8::Module>(env.isolate(), module));
 
-		Maybe<bool> result = module->InstantiateModule(env.context(), ModuleLoader::importModule);
+		v8::Maybe<bool> result = module->InstantiateModule(env.context(), ModuleLoader::importModule);
 
 		if (result.IsNothing())
 		{
@@ -135,7 +131,7 @@ namespace DarkDescent::JS
 		}
 		else
 		{
-			MaybeLocal<Value> result = module->Evaluate(env.context());
+			v8::MaybeLocal<v8::Value> result = module->Evaluate(env.context());
 			return v8::MaybeLocal<v8::Module>(module);
 		}
 	}
@@ -147,121 +143,102 @@ namespace DarkDescent::JS
 		return v8::MaybeLocal<v8::Value>();
 	}
 
-	v8::MaybeLocal<v8::Module> ModuleLoader::loadModule(const char* filePath) const
+	v8::MaybeLocal<v8::Module> ModuleLoader::loadModule(const std::filesystem::path& filePath) const
 	{
 		using namespace v8;
 
-		std::filesystem::path path(filePath);
+		if (filePath.is_relative())
+			throw TraceException("Cannot load module with a relative path!");
 
-		if (path.is_relative())
-			path = (Engine::getInstance().gamePath / path).lexically_normal();
-
+		std::filesystem::path path = filePath;
 		std::string p = (path / "..").lexically_normal().string();
 		std::replace(p.begin(), p.end(), '\\', '/');
 		std::string fileName = path.filename().string();
 
 		std::ifstream is(path);
-		std::string code = std::string("const __dirname = \"") + p + "\"; const __filename = \"" + fileName + "\";" + std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-
-		TryCatch tryCatcher(env.isolate());
-
-		Local<String> sourceStr = JS::string(env, code.c_str());
-
-		ScriptOrigin origin(env.isolate(), JS::string(env, path.string().c_str()), 0, 0, true, -1, v8::Local<v8::Value>(), false, false, true);
-
-		ScriptCompiler::Source source(sourceStr, origin);
-		MaybeLocal<Module> maybeModule = ScriptCompiler::CompileModule(env.isolate(), &source);
-
-		if (maybeModule.IsEmpty())
-		{
-			if (tryCatcher.HasCaught())
-			{
-				std::string exception = JS::parseString(env, tryCatcher.Exception());
-				Logger::get().warn("Got exception while loading module ", filePath, "!\n", exception);
-			}
-
-			Logger::get().warn("Module ", path.string(), " is empty!");
-			return v8::MaybeLocal<v8::Module>();
-		}
-		else if (tryCatcher.HasCaught())
-		{
-			std::string exception = JS::parseString(env, tryCatcher.Exception());
-			Logger::get().warn("Got exception while loading module ", filePath, "!\n", exception);
-		}
-		else
-		{
-			Local<Module> module = maybeModule.ToLocalChecked();
-
-			modulesPaths_.emplace(module->ScriptId(), path.string());
-			modules_.emplace(path.string(), new Persistent<Module>(env.isolate(), module));
-
-			Maybe<bool> result = module->InstantiateModule(env.context(), importModule);
-
-			if (result.IsNothing())
-			{
-				Logger::get().warn("Could not instantiate module ", path.string(), "!");
-				return module;
-			}
-			else
-			{
-				module->Evaluate(env.context());
-				return module;
-			}
-		}
+		std::string code = std::format("const __dirname = \"{}\"; const __filename = \"{}\";", p.c_str(), fileName.c_str()) + std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+		return instantiateModule(path.string(), code);
 	}
 
-	void ModuleLoader::loadEntryModule(const std::filesystem::path& filePath) const
+	void ModuleLoader::initialize(const std::filesystem::path& filePath) const
 	{
-		using namespace v8;
-
-		TryCatch tryCatcher(env.isolate());
-
 		std::filesystem::path path;
 
 		if (filePath.is_relative())
 			path = (Engine::getInstance().gamePath / filePath).lexically_normal();
+		else
+			path = filePath;
 
 		std::string p = path.string();
 		std::replace(p.begin(), p.end(), '\\', '/');
 
-		std::string entry = path.string() + ".native.entry";
+		std::string entry = p + ".native.entry";
 
-		std::string code;
+		std::string code = std::format("import entry from \"{}\"; {}", p, "entry();");
 
-		code = std::format("import entry from \"{}\"; {}", p, "entry(Worker.getParentWorker(), process.args);");
+		if(instantiateModule(p, code, entry).IsEmpty())
+			throw TraceException("Could not instantiate entry module!");
+	}
 
-		Local<String> sourceStr = JS::string(env, code);
-		ScriptOrigin origin(env.isolate(), JS::string(env, entry), 0, 0, true, -1, v8::Local<v8::Value>(), false, false, true);
-		ScriptCompiler::Source source(sourceStr, origin);
+	v8::MaybeLocal<v8::Module> ModuleLoader::instantiateModule(const std::string& path, const std::string& code) const
+	{
+		return instantiateModule(path, code, path);
+	}
+	
+	v8::MaybeLocal<v8::Module> ModuleLoader::instantiateModule(const std::string& path, const std::string& code, const std::string& entry) const
+	{
+		v8::TryCatch tryCatcher(env.isolate());
 
-		MaybeLocal<Module> maybeModule = ScriptCompiler::CompileModule(env.isolate(), &source);
+		v8::Local<v8::String> sourceStr = JS::string(env, code.c_str());
 
-		if (maybeModule.IsEmpty())
+		v8::ScriptOrigin origin(env.isolate(), JS::string(env, entry.c_str()), 0, 0, true, -1, v8::Local<v8::Value>(), false, false, true);
+
+		v8::ScriptCompiler::Source source(sourceStr, origin);
+		v8::MaybeLocal<v8::Module> maybeModule = v8::ScriptCompiler::CompileModule(env.isolate(), &source);
+
+		if (tryCatcher.HasCaught())
 		{
-			Logger::get().warn("Could not compile module ", p, "!");
-			return;
+			Console::logException(env, tryCatcher.Exception());
+			std::string exception = std::format("Got exception while loading module {}! Exception: {}", path, JS::parseString(env, tryCatcher.Exception()));
+			throw TraceException(exception.c_str());
 		}
-		else if (tryCatcher.HasCaught())
+		else if (maybeModule.IsEmpty())
 		{
-			std::string exception = JS::parseString(env, tryCatcher.Exception());
-			Logger::get().warn("Got exception while loading module ", p, "!\n", exception);
+			std::string exception = std::format("Module {} is empty!", path.c_str());
+			throw TraceException(exception.c_str());
 		}
 		else
 		{
-			Local<Module> module = maybeModule.ToLocalChecked();
+			v8::Local<v8::Module> module = maybeModule.ToLocalChecked();
 
 			modulesPaths_.emplace(module->ScriptId(), entry);
-			modules_.emplace(entry, new Persistent<Module>(env.isolate(), module));
+			modules_.emplace(entry, new v8::Persistent<v8::Module>(env.isolate(), module));
 
-			Maybe<bool> result = module->InstantiateModule(env.context(), importModule);
-
-			if (result.IsNothing())
+			v8::Maybe<bool> result = module->InstantiateModule(env.context(), importModule);
+			if (tryCatcher.HasCaught())
 			{
-				Logger::get().warn("Could not instantiate module ", p, "!");
+				Console::logException(env, tryCatcher.Exception());
+				std::string exception = std::format("Got exception while instantiating module {}! Exception: {}", path, JS::parseString(env, tryCatcher.Exception()));
+				throw TraceException(exception.c_str());
+			}
+			else if (result.IsNothing())
+			{
+				std::string exception = std::format("Could not instantiate module {}!", path.c_str());
+				throw TraceException(exception.c_str());
 			}
 			else
 			{
 				module->Evaluate(env.context());
+				if (tryCatcher.HasCaught())
+				{
+					Console::logException(env, tryCatcher.Exception());
+					std::string exception = std::format("Got exception while evaluating module {}! Exception: {}", path, JS::parseString(env, tryCatcher.Exception()));
+					throw TraceException(exception.c_str());
+				}
+				else
+				{
+					return module;
+				}
 			}
 		}
 	}

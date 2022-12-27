@@ -38,23 +38,22 @@ namespace DarkDescent::JS
 		~ModuleLoader();
 
 		v8::MaybeLocal<v8::Value> getJsonData(const int moduleHash) const;
-		v8::MaybeLocal<v8::Module> loadModule(const char* filePath) const;
-		v8::MaybeLocal<v8::Module> loadJsonModule(const char* filePath) const;
-		void loadEntryModule(const std::filesystem::path& filePath) const;
+		v8::MaybeLocal<v8::Module> loadModule(const std::filesystem::path& filePath) const;
+		v8::MaybeLocal<v8::Module> loadJsonModule(const std::filesystem::path& filePath) const;
+		
+		v8::MaybeLocal<v8::Module> instantiateModule(const std::string& path, const std::string& code) const;
+		v8::MaybeLocal<v8::Module> instantiateModule(const std::string& path, const std::string& code, const std::string& entry) const;
 
-	// 	v8::MaybeLocal<v8::Module> loadModule(const std::filesystem::path& path) const;
-	// 	void loadEntryModule(const std::filesystem::path& path) const;
+	public:
+		void initialize(const std::filesystem::path& filePath) const;
 
-
-	// private:
-	// 	bool compileModule(const std::filesystem::path& path, const std::string& code, v8::Local<v8::Module>& module) const;
-	// 	ScriptPathInfo resolveScriptPath(const std::filesystem::path& path) const;
-
+	public:
 		const Env& env;
 
+	private:
 		mutable std::array<std::filesystem::path, 3> checkPaths_;
 		bool isLoaded_;
-		
+
 		mutable std::unordered_map<int, std::string> modulesPaths_;
 		mutable std::unordered_map<std::string, v8::Persistent<v8::Module>*> modules_;
 		mutable std::unordered_map<int, v8::Persistent<v8::Value>*> jsonModules_;

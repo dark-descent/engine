@@ -41,7 +41,7 @@ namespace DarkDescent
 	{
 		mainEnv().run([&](const JS::Env& env)
 		{
-			env.moduleLoader_.loadEntryModule(engine_.config.entry);
+			env.moduleLoader_.initialize(engine_.config.entry);
 		});
 	}
 }
