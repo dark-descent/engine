@@ -5,10 +5,11 @@
 #include "Engine.hpp"
 #include "js/Helpers.hpp"
 #include "js/Process.hpp"
+#include "js/Class.hpp"
 
 namespace DarkDescent::JS
 {
-	Env Env::create(const bool standAlone)
+	Env Env::create(std::size_t index, const bool standAlone)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
@@ -16,7 +17,7 @@ namespace DarkDescent::JS
 		return Env(std::move(params), standAlone);
 	}
 
-	Env* Env::createNew(const bool standAlone)
+	Env* Env::createNew(std::size_t index, const bool standAlone)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
@@ -24,7 +25,8 @@ namespace DarkDescent::JS
 		return new Env(std::move(params), standAlone);
 	}
 
-	Env::Env(v8::Isolate::CreateParams&& createParams, const bool isStandAloneEnv):
+	Env::Env(v8::Isolate::CreateParams&& createParams, std::size_t index, const bool isStandAloneEnv):
+		index(index),
 		createParams_(createParams),
 		isolate_(v8::Isolate::New(createParams_)),
 		moduleLoader_(*this)
@@ -56,9 +58,19 @@ namespace DarkDescent::JS
 	Env::~Env()
 	{
 		Logger::get().info("Terminating JS::Env...");
+
+		for(const auto& [_, jsClass] : classes_)
+			delete jsClass;
+		
 		context_.Reset();
 		isolate_->Dispose();
 		delete createParams_.array_buffer_allocator;
+	}
+
+	void Env::exposeGlobal(const char* name, v8::Local<v8::Value> val) const
+	{
+		JS::Object global(*this, context()->Global());
+		global.set(name, val);
 	}
 
 	v8::MaybeLocal<v8::Value> Env::readJson(const std::string& source) const
@@ -74,5 +86,10 @@ namespace DarkDescent::JS
 		ss << is.rdbuf();
 		const std::string& s = ss.str();
 		return readJson(s);
+	}
+
+	void Env::throwException(const char* error) const
+	{
+		isolate_->ThrowException(string(*this, error));
 	}
 }

@@ -20,6 +20,21 @@ namespace DarkDescent
 		destroy();
 	}
 
+	void Window::show()
+	{
+		SDL_ShowWindow(sdlWindow_);
+	}
+
+	void Window::minimize()
+	{
+		SDL_MinimizeWindow(sdlWindow_);
+	}
+
+	void Window::maximize()
+	{
+		SDL_MaximizeWindow(sdlWindow_);
+	}
+
 	void Window::destroy()
 	{
 		if (!isDestroyed_)

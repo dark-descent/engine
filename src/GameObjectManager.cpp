@@ -8,6 +8,11 @@ namespace DarkDescent
 	{
 		archManager_ = engine_.getSubSystem<ArchManager>();
 	}
+
+	void GameObjectManager::onReady()
+	{
+
+	}
 	
 	void GameObjectManager::onTerminate()
 	{

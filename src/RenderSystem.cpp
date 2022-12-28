@@ -10,9 +10,14 @@ namespace DarkDescent
 		addEventHandler(hash, [](SubSystem* self, const Event& event, const void* data)
 		{
 			RenderSystem& system = *static_cast<RenderSystem*>(self);
-		EventCallback callback = reinterpret_cast<EventCallback>(data);
-		callback(system, event);
+			EventCallback callback = reinterpret_cast<EventCallback>(data);
+			callback(system, event);
 		}, callback);
+	}
+
+	void RenderSystem::onReady()
+	{
+
 	}
 
 	void RenderSystem::onInitialize()

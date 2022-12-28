@@ -19,6 +19,9 @@ namespace DarkDescent
 		Window(std::size_t index, Config&& config);
 		~Window();
 
+		void show();
+		void minimize();
+		void maximize();
 		void destroy();
 
 		inline bool isDestroyed() const { return isDestroyed_; }

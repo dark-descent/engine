@@ -20,11 +20,14 @@ namespace DarkDescent
 		SubSystem(SubSystem&&) = delete;
 		virtual ~SubSystem() = 0;
 
-	protected:
+	private:
 		void initialize();
+		void allInitialized();
 		void terminate();
-
+	
+	protected:
 		virtual void onInitialize();
+		virtual void onReady();
 		virtual void onTerminate();
 
 		void emitEvent(const char* name, const void* data = nullptr);
@@ -35,9 +38,21 @@ namespace DarkDescent
 		void addEventHandler(Hash name, EventHandler eventHandler, const void* data = nullptr);
 		void removeEventHandler(Hash name, EventHandler eventHandler);
 
+		template<typename T>
+		void emitEvent(T event, const void* data = nullptr)
+		{
+			emitEvent(static_cast<Hash>(event), data);
+		}
+
+		template<typename T>
+		void addEventHandler(T event, EventHandler eventHandler, const void* data = nullptr)
+		{
+			addEventHandler(static_cast<Hash>(event), eventHandler, data);
+		}
+
 	private:
 		std::string name_;
-	
+
 	protected:
 		const Engine& engine_;
 

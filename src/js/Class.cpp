@@ -131,7 +131,7 @@ namespace DarkDescent::JS
 
 	}
 
-	Class::~Class() { }
+	Class::~Class() { persistent_.Reset(); }
 
 	void Class::initialize()
 	{

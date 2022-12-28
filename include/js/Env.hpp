@@ -6,15 +6,18 @@
 namespace DarkDescent
 {
 	class ScriptManager;
-	
+
 	namespace JS
 	{
+		class Class;
+		class Object;
+
 		class Env
 		{
 		public:
 			struct Scope
 			{
-				Scope(Env& env):
+				Scope(const Env& env):
 					isolateScope_(env.isolate_),
 					handleScope_(env.isolate_),
 					contextScope_(env.context())
@@ -25,15 +28,17 @@ namespace DarkDescent
 				const v8::Context::Scope contextScope_;
 			};
 
-			static Env create(const bool standAlone = false);
-			static Env* createNew(const bool standAlone = false);
+		private:
+			static Env create(std::size_t index, const bool standAlone = false);
+			static Env* createNew(std::size_t index, const bool standAlone = false);
 
+		public:
 			static inline const Env& fromIsolate(v8::Isolate* isolate) { return *static_cast<Env*>(isolate->GetData(0)); }
 			static inline const Env& fromContext(v8::Local<v8::Context> ctx) { return fromIsolate(ctx->GetIsolate()); }
 			static inline const Env& fromArgs(const v8::FunctionCallbackInfo<v8::Value>& args) { return fromIsolate(args.GetIsolate()); }
 
 		private:
-			Env(v8::Isolate::CreateParams&& createParams, const bool isStandAloneEnv = false);
+			Env(v8::Isolate::CreateParams&& createParams, std::size_t index, const bool isStandAloneEnv = false);
 			Env(const Env&) = delete;
 			Env(Env&&) = delete;
 
@@ -50,15 +55,36 @@ namespace DarkDescent
 			v8::MaybeLocal<v8::Value> readJson(const std::string& source) const;
 			v8::MaybeLocal<v8::Value> readJsonFile(const std::filesystem::path& jsonPath) const;
 
+			void throwException(const char* error) const;
+
 			template<typename Callback>
-			void run(Callback callback)
+			void run(Callback callback) const
 			{
 				Scope scope(*this);
 				callback(*this);
 			}
 
-			bool isLoaded() const { return isLoaded_; }
+			template<typename T>
+			v8::Local<v8::Function> registerClass() const
+			{
+				T* jsClass = new T(*this);
+				jsClass->initialize();
+				classes_.insert({ typeid(T).name(), jsClass });
+				return jsClass->getClass();
+			}
+
+			template<typename T>
+			T& getClass() const
+			{
+				return *static_cast<T*>(classes_.at(typeid(T).name()));
+			}
+
+			void exposeGlobal(const char* name, v8::Local<v8::Value>) const;
+			
+			inline bool isLoaded() const { return isLoaded_; }
 			inline const ModuleLoader& moduleLoader() const { return moduleLoader_; }
+
+			const std::size_t index;
 
 		private:
 			v8::Isolate::CreateParams createParams_;
@@ -67,6 +93,8 @@ namespace DarkDescent
 
 			ModuleLoader moduleLoader_;
 			mutable bool isLoaded_;
+
+			mutable std::unordered_map<const char*, Class*> classes_;
 
 			friend class ScriptManager;
 		};

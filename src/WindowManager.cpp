@@ -3,22 +3,27 @@
 #include "TraceException.hpp"
 #include "Engine.hpp"
 #include "ScriptManager.hpp"
+#include "js/Window.hpp"
 
 namespace DarkDescent
 {
 	void WindowManager::onInitialize()
 	{
-		SDL_Window* window = NULL;
-		SDL_Surface* screenSurface = NULL;
-
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 			throw TraceException(SDL_GetError());
 
 		SDL_AddEventWatch(eventWatcher, this);
 
-		// ScriptManager* sm = engine_.getSubSystem<ScriptManager>();
-	
-		// sm->exposeGlobal();
+		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, const void* data)
+		{
+			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
+			env.exposeGlobal("Window", env.registerClass<JS::WindowClass>());
+		}, this);
+	}
+
+	void WindowManager::onReady()
+	{
+
 	}
 
 	void WindowManager::onTerminate()

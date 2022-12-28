@@ -13,6 +13,11 @@ namespace DarkDescent
 		engine_.logger.info(name_, " initialized!");
 	}
 
+	void SubSystem::allInitialized()
+	{
+		onReady();
+	}
+
 	void SubSystem::terminate()
 	{
 		engine_.logger.info("Terminating ", name_, "...");
@@ -21,6 +26,7 @@ namespace DarkDescent
 	}
 
 	void SubSystem::onInitialize() { }
+	void SubSystem::onReady() { }
 	void SubSystem::onTerminate() { }
 
 	void SubSystem::emitEvent(const char* name, const void* data)

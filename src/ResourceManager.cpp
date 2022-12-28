@@ -6,6 +6,11 @@ namespace DarkDescent
 	{
 		
 	}
+
+	void ResourceManager::onReady()
+	{
+
+	}
 			
 	void ResourceManager::onTerminate()
 	{

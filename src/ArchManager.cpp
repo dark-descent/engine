@@ -7,6 +7,11 @@ namespace DarkDescent
 
 	}
 
+	void ArchManager::onReady()
+	{
+
+	}
+
 	void ArchManager::onTerminate()
 	{
 

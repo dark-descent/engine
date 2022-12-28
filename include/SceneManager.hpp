@@ -14,6 +14,7 @@ namespace DarkDescent
 
 	protected:
 		virtual void onInitialize() override;
+		virtual void onReady() override;
 		virtual void onTerminate() override;
 
 	public:

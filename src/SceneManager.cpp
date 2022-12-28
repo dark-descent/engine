@@ -10,6 +10,11 @@ namespace DarkDescent
 
 	}
 
+	void SceneManager::onReady()
+	{
+
+	}
+
 	void SceneManager::onTerminate()
 	{
 

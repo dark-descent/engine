@@ -118,11 +118,14 @@ namespace DarkDescent
 		const Logger& logger = Logger::get();
 		logger.info("Initializing engine...");
 
+		ScriptManager& sm = initializeSubSystem<ScriptManager>();
 		initializeSubSystem<ArchManager>();
 		initializeSubSystem<GameObjectManager>();
-		initializeSubSystem<ScriptManager>();
 		initializeSubSystem<WindowManager>();
 		initializeSubSystem<RenderSystem>();
+
+		for(const auto& [_, system] : subSystems_)
+			system->allInitialized();
 
 		logger.info("Engine initialized!");
 	}

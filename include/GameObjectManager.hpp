@@ -16,8 +16,9 @@ namespace DarkDescent
 		GameObject* create();
 
 	protected:
-		virtual void onInitialize();
-		virtual void onTerminate();
+		virtual void onInitialize() override;
+		virtual void onReady() override;
+		virtual void onTerminate() override;
 
 	private:
 		ArchManager* archManager_;

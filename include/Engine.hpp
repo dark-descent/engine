@@ -27,7 +27,7 @@ namespace DarkDescent
 		~Engine();
 
 		template<IsSubSystem T>
-		void initializeSubSystem()
+		T& initializeSubSystem()
 		{
 			const char* name = typeid(T).name();
 			Hash hash = Hasher::hash(name);
@@ -38,6 +38,7 @@ namespace DarkDescent
 			subSystems_.emplace(hash, subSystem);
 			initializationOrder_.emplace_back(subSystem);
 			subSystem->initialize();
+			return *subSystem;
 		}
 
 	public:

@@ -104,7 +104,7 @@ namespace DarkDescent
 			return *first;
 		}
 
-		T& at(std::size_t index)
+		T& at(std::size_t index) const
 		{
 			std::size_t bufferIndex = index / Capacity;
 			index = index % Capacity;
@@ -134,7 +134,7 @@ namespace DarkDescent
 			std::size_t bufferIndex = index / Capacity;
 			index = index % Capacity;
 			std::optional<T>& maybe = buffers_.at(bufferIndex)->buffer[index];
-			maybe.isEmpty = true;
+			maybe.reset();
 		}
 
 		template<typename Callback>

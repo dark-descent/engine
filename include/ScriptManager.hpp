@@ -3,11 +3,25 @@
 #include "SubSystem.hpp"
 #include "pch.hpp"
 #include "js/Env.hpp"
+#include "js/Object.hpp"
+#include "PersistentVector.hpp"
 
 namespace DarkDescent
 {
+	namespace JS
+	{
+		class Object;
+	}
+
 	class ScriptManager: public SubSystem
 	{
+	public:
+		enum class Events : Hash
+		{
+			ENV_CREATED = Hasher::hash("ENV_CREATED"), // 1801904197
+			ENV_DESTROYED = Hasher::hash("ENV_DESTROYED") // 676292800
+		};
+
 	private:
 		static std::unique_ptr<v8::Platform> platform_;
 
@@ -33,16 +47,18 @@ namespace DarkDescent
 
 	protected:
 		virtual void onInitialize() override;
+		virtual void onReady() override;
 		virtual void onTerminate() override;
-	public:
-		inline JS::Env& mainEnv() const { return *(envs_.at(0)); }
 		
+	public:
+		const JS::Env& createEnv();
+		void destroyEnv(const JS::Env& env);
+
+		inline const JS::Env& mainEnv() const { return *envs_.at(0); }
+
 		void initializeGame();
 
-		void exposeGlobal();
-
 	private:
-		std::vector<JS::Env*> envs_;
-
+		PersistentVector<JS::Env*, 8> envs_;
 	};
 }
