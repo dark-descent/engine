@@ -48,7 +48,7 @@ namespace DarkDescent::JS
 
 	JS_CREATE_CLASS(WindowClass)
 	{
-		// builder.setStaticMethod("create", onCreate); // TODO: async 
+		builder.setName("Window");
 		builder.setConstructor(ctor);
 		builder.setMethod("onLoad");
 		builder.setMethod("minimize");

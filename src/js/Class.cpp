@@ -50,7 +50,13 @@ namespace DarkDescent::JS
 		internalFieldCount_(0),
 		template_(v8::FunctionTemplate::New(env_.isolate(), nullptr, v8::External::New(env_.isolate(), self)))
 	{
+		
+	}
 
+	const ClassBuilder& ClassBuilder::setName(const char* name) const
+	{
+		template_->SetClassName(JS::string(env_, name));
+		return *this;
 	}
 
 	const ClassBuilder& ClassBuilder::setStatic(const char* key, v8::Local<v8::Value> val, bool readonly) const

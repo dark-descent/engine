@@ -30,22 +30,22 @@ namespace DarkDescent
 		virtual void onReady();
 		virtual void onTerminate();
 
-		void emitEvent(const char* name, const void* data = nullptr);
-		void addEventHandler(const char* name, EventHandler eventHandler, const void* data = nullptr);
+		void emitEvent(const char* name, void* data = nullptr);
+		void addEventHandler(const char* name, EventHandler eventHandler, void* data = nullptr);
 		void removeEventHandler(const char* name, EventHandler eventHandler);
 
-		void emitEvent(Hash name, const void* data = nullptr);
-		void addEventHandler(Hash name, EventHandler eventHandler, const void* data = nullptr);
+		void emitEvent(Hash name, void* data = nullptr);
+		void addEventHandler(Hash name, EventHandler eventHandler, void* data = nullptr);
 		void removeEventHandler(Hash name, EventHandler eventHandler);
 
 		template<typename T>
-		void emitEvent(T event, const void* data = nullptr)
+		void emitEvent(T event, void* data = nullptr)
 		{
 			emitEvent(static_cast<Hash>(event), data);
 		}
 
 		template<typename T>
-		void addEventHandler(T event, EventHandler eventHandler, const void* data = nullptr)
+		void addEventHandler(T event, EventHandler eventHandler, void* data = nullptr)
 		{
 			addEventHandler(static_cast<Hash>(event), eventHandler, data);
 		}

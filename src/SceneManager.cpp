@@ -2,12 +2,21 @@
 #include "Scene.hpp"
 #include "Engine.hpp"
 #include "ResourceManager.hpp"
+#include "ScriptManager.hpp"
+#include "js/Scene.hpp"
+#include "js/SceneManager.hpp"
 
 namespace DarkDescent
 {
 	void SceneManager::onInitialize()
 	{
-
+		addEventHandler(ScriptManager::Events::ENV_CREATED, EVENT_HANDLER()
+		{
+			assert(data);
+			const JS::Env& env = *static_cast<const JS::Env*>(event.data);
+			env.global().set("Scene", env.registerClass<JS::SceneClass>());
+			env.engineNamespace().set("SceneManager", JS::SceneManager::create(env, static_cast<SceneManager*>(data)));
+		}, this);
 	}
 
 	void SceneManager::onReady()
@@ -20,18 +29,14 @@ namespace DarkDescent
 
 	}
 
+	void SceneManager::registerScene(const char* path)
+	{
+		std::string p(path);
+		resourceManager_.registerResource<Scene>(p, p);
+	}
+
 	Scene& SceneManager::loadScene(const char* path)
 	{
-		ResourceManager* rm = engine_.getSubSystem<ResourceManager>();
-
-		Hash hash = Hasher::hash(path);
-		if (!scenes_.contains(hash))
-			scenes_.emplace(hash, Scene(path, rm->getResource(path)));
-		Scene& scene = scenes_.at(hash);
-		scene.load();
-		if(activeScene_.has_value())
-			activeScene_.value()->unload();
-		activeScene_.emplace(std::addressof(scene));
-		return scene;
+		return resourceManager_.getResource<Scene>(path);
 	}
 }

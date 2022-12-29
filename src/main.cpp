@@ -47,7 +47,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 #if defined(_DEBUG) && defined(_WIN32)
 	logger.info("Press a key to exit...");
 	getchar();
-	FreeConsole();
+	// FreeConsole();
 #endif
 
 	Logger::terminate();

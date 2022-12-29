@@ -1,6 +1,8 @@
 #include "ScriptManager.hpp"
 #include "Engine.hpp"
 #include "TraceException.hpp"
+#include "ResourceManager.hpp"
+#include "Script.hpp"
 
 namespace DarkDescent
 {
@@ -30,6 +32,7 @@ namespace DarkDescent
 
 	void ScriptManager::onReady()
 	{
+		engine_.getSubSystem<ResourceManager>()->registerResourceType<Script, const char*>();
 		createEnv();
 	}
 
@@ -40,11 +43,12 @@ namespace DarkDescent
 			destroyEnv(*env);
 		});
 		envs_.clear();
+		terminateV8();
 	}
 
 	const JS::Env& ScriptManager::createEnv()
 	{
-		const JS::Env* env = envs_.emplace_back(JS::Env::createNew(envs_.getNextIndex()));
+		JS::Env* env = envs_.emplace_back(JS::Env::createNew(envs_.getNextIndex(), *engine_.getSubSystem<ResourceManager>()));
 		JS::Env::Scope scope(*env);
 		emitEvent(Events::ENV_CREATED, env);
 		return *env;
@@ -54,8 +58,9 @@ namespace DarkDescent
 	{
 		{
 			JS::Env::Scope scope(env);
-			emitEvent(Events::ENV_DESTROYED, std::addressof(env));
+			emitEvent(Events::ENV_DESTROYED, std::addressof(*envs_.at(env.index)));
 		}
+		
 		env.~Env();
 		envs_.erase_at(env.index);
 	}
@@ -64,7 +69,7 @@ namespace DarkDescent
 	{
 		mainEnv().run([ & ](const JS::Env& env)
 		{
-			env.moduleLoader_.initialize(engine_.config.entry);
+			env.moduleLoader_.initialize(engine_.config().entry);
 		});
 	}
 }

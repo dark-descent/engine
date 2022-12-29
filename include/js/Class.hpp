@@ -66,7 +66,7 @@ namespace DarkDescent::JS
 
 	public:
 		ClassBuilder(const Env& env, void* self);
-
+		const ClassBuilder& setName(const char* name) const;
 		const ClassBuilder& setStatic(const char* key, v8::Local<v8::Value> val, bool readonly = false) const;
 		const ClassBuilder& setStaticMethod(const char* name, v8::FunctionCallback callback = ClassBuilder::emptyFunction, v8::Local<v8::Value> data = v8::Local<v8::Value>()) const;
 		const ClassBuilder& setStaticMethod(const char* name, v8::FunctionCallback callback, void* data) const;

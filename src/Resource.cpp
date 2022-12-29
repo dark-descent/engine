@@ -2,32 +2,15 @@
 
 namespace DarkDescent
 {
-	Resource::Resource(std::string&& path):
+	IResource::IResource(const std::string& path):
 		path(path),
 		isLoaded_(false)
 	{
 
 	}
 
-	Resource::Resource(const std::string& path):
-		path(path),
-		isLoaded_(false)
+	IResource::~IResource()
 	{
 
-	}
-
-	Resource::~Resource()
-	{
-
-	}
-
-	bool Resource::isLoaded() const
-	{
-		return isLoaded_;
-	}
-
-	bool Resource::load()
-	{
-		return true;		
 	}
 }

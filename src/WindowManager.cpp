@@ -14,10 +14,10 @@ namespace DarkDescent
 
 		SDL_AddEventWatch(eventWatcher, this);
 
-		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, const void* data)
+		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, void* data)
 		{
 			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
-			env.exposeGlobal("Window", env.registerClass<JS::WindowClass>());
+			env.global().set("Window", env.registerClass<JS::WindowClass>());
 		}, this);
 	}
 
@@ -58,7 +58,7 @@ namespace DarkDescent
 
 	std::size_t WindowManager::createWindow(const std::string& title, int width, int height)
 	{
-		const std::size_t index = windows_.getNextIndex();
+		std::size_t index = windows_.getNextIndex();
 		Window& w = windows_.emplace_back(index, Window::Config{ .title = title });
 		idToIndexMap_.insert({ SDL_GetWindowID(w.sdlWindow_), index });
 		emitEvent(Hasher::hash("WINDOW_CREATED"), &index);

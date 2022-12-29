@@ -29,12 +29,12 @@ namespace DarkDescent
 	void SubSystem::onReady() { }
 	void SubSystem::onTerminate() { }
 
-	void SubSystem::emitEvent(const char* name, const void* data)
+	void SubSystem::emitEvent(const char* name, void* data)
 	{
 		emitEvent(Hasher::hash(name), data);
 	}
 
-	void SubSystem::addEventHandler(const char* name, EventHandler eventHandler, const void* data)
+	void SubSystem::addEventHandler(const char* name, EventHandler eventHandler, void* data)
 	{
 		addEventHandler(Hasher::hash(name), eventHandler, data);
 	}
@@ -44,13 +44,13 @@ namespace DarkDescent
 		removeEventHandler(Hasher::hash(name), eventHandler);
 	}
 
-	void SubSystem::emitEvent(Hash name, const void* data)
+	void SubSystem::emitEvent(Hash name, void* data)
 	{
 		Event e { this, data };
 		engine_.eventManager.emit(name, e);
 	}
 
-	void SubSystem::addEventHandler(Hash name, EventHandler eventHandler, const void* data)
+	void SubSystem::addEventHandler(Hash name, EventHandler eventHandler, void* data)
 	{
 		engine_.eventManager.on(name, this, eventHandler, data);
 	}

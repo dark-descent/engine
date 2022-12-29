@@ -5,11 +5,14 @@
 #include "Logger.hpp"
 #include "js/Helpers.hpp"
 #include "js/Console.hpp"
+#include "ResourceManager.hpp"
+#include "Script.hpp"
 
 namespace DarkDescent::JS
 {
-	ModuleLoader::ModuleLoader(const Env& env):
+	ModuleLoader::ModuleLoader(const Env& env, ResourceManager& resourceManager):
 		env(env),
+		resourceManager_(resourceManager),
 		checkPaths_(),
 		isLoaded_(false)
 	{ }
@@ -28,9 +31,6 @@ namespace DarkDescent::JS
 		std::string import = JS::parseString(env, specifier);
 
 		std::replace(import.begin(), import.end(), '\\', '/');
-
-		// if (import.compare("native-js") == 0)
-		// 	return v8::MaybeLocal<v8::Module>(env.nativeJSModule_.Get(env.isolate()));
 
 		std::filesystem::path importPath = import;
 		std::filesystem::path fromPath;
@@ -156,8 +156,10 @@ namespace DarkDescent::JS
 		std::string fileName = path.filename().string();
 
 		std::ifstream is(path);
-		std::string code = std::format("const __dirname = \"{}\"; const __filename = \"{}\";", p.c_str(), fileName.c_str()) + std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-		return instantiateModule(path.string(), code);
+		std::string codePrefix = std::format("const __dirname = \"{}\"; const __filename = \"{}\";", p.c_str(), fileName.c_str());
+		std::string pathStr = path.string();
+		std::string code = resourceManager_.loadResourceImmediate<Script>(pathStr, pathStr).data();
+		return instantiateModule(path.string(), codePrefix + code);
 	}
 
 	void ModuleLoader::initialize(const std::filesystem::path& filePath) const

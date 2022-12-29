@@ -8,8 +8,8 @@ declare namespace Engine
 	abstract class Game
 	{
 		protected abstract initialize(config: IConfig);
-		protected abstract onLoad();
-		protected abstract onTerminate();
+		protected abstract onLoad(): any;
+		protected abstract onTerminate(): void;
 
 		public start(): void;
 	}

@@ -1,20 +1,21 @@
 #pragma once
 
 #include "pch.hpp"
+#include "Resource.hpp"
 
 namespace DarkDescent
 {
-	class Resource;
-	class Scene
+	struct SceneData
+	{
+		
+	};
+
+	class Scene: public Resource<Scene, SceneData>
 	{
 	public:
-		Scene(const std::string& path, const Resource& resource);
-		~Scene();
+		Scene(const std::string& path): Resource(path) {}
+		virtual ~Scene() {}
 
-		const std::string path;
-		const Resource& resource;
-
-		void load();
-		void unload();
+		virtual void onLoad() {  }
 	};
 }

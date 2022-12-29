@@ -11,6 +11,7 @@
 #include "GameObjectManager.hpp"
 #include "Component.hpp"
 #include "RenderSystem.hpp"
+#include "ResourceManager.hpp"
 
 namespace DarkDescent
 {
@@ -23,7 +24,7 @@ namespace DarkDescent
 
 		std::filesystem::path gamePath;
 		std::filesystem::path gameJsonPath;
-		
+
 		const std::size_t count = args.size();
 		std::vector<const char*> gameArgs;
 
@@ -55,31 +56,10 @@ namespace DarkDescent
 
 		if (!std::filesystem::exists(gameJsonPath))
 			throw TraceException("Could not load the game!");
-
-		Config config;
-
-		ScriptManager::initializeV8();
-
-		ScriptManager::execStandAlone([ & ](const JS::Env& env)
-		{
-			auto json = env.readJsonFile(gameJsonPath).ToLocalChecked();
-
-			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
-			{
-				if (obj.IsEmpty())
-					obj = json;
-				return JS::getFromObject(env, obj, key);
-			};
-
-			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
-
-			config.name = JS::parseString(env, read("name").ToLocalChecked());
-			config.entry = JS::parseString(env, read("entry").ToLocalChecked());
-		});
-
+			
 		std::filesystem::path p = (gameJsonPath / "..").lexically_normal();
-		
-		instance_.emplace(new Engine(std::move(config), std::move(p), std::move(gameArgs)));
+
+		instance_.emplace(new Engine(std::move(p), std::move(gameArgs)));
 		return *(instance_.value());
 	}
 
@@ -100,14 +80,12 @@ namespace DarkDescent
 		delete engine;
 		instance_.reset();
 
-		ScriptManager::terminateV8();
-
 		return true;
 	}
 
-	Engine::Engine(Config&& config, std::filesystem::path&& gamePath, std::vector<const char*>&& gameArgs):
+	Engine::Engine(std::filesystem::path&& gamePath, std::vector<const char*>&& gameArgs):
 		logger(Logger::get()),
-		config(config),
+		config_(),
 		gamePath(gamePath),
 		mainThreadID(std::this_thread::get_id()),
 		eventManager(),
@@ -118,14 +96,33 @@ namespace DarkDescent
 		const Logger& logger = Logger::get();
 		logger.info("Initializing engine...");
 
+		initializeSubSystem<ResourceManager>();
 		ScriptManager& sm = initializeSubSystem<ScriptManager>();
 		initializeSubSystem<ArchManager>();
 		initializeSubSystem<GameObjectManager>();
 		initializeSubSystem<WindowManager>();
 		initializeSubSystem<RenderSystem>();
 
-		for(const auto& [_, system] : subSystems_)
+		for (const auto& [_, system] : subSystems_)
 			system->allInitialized();
+
+		sm.mainEnv().run([&](const JS::Env& env)
+		{
+			auto jsonPath = gamePath / "game.json";
+			auto json = env.readJsonFile(jsonPath).ToLocalChecked();
+
+			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+			{
+				if (obj.IsEmpty())
+					obj = json;
+				return JS::getFromObject(env, obj, key);
+			};
+
+			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
+
+			config_.name = JS::parseString(env, read("name").ToLocalChecked());
+			config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
+		});
 
 		logger.info("Engine initialized!");
 	}
@@ -151,5 +148,6 @@ namespace DarkDescent
 		ScriptManager* sm = getSubSystem<ScriptManager>();
 
 		sm->initializeGame();
+		wm->enterEventLoop();
 	}
 }

@@ -3,6 +3,8 @@
 #include "SubSystem.hpp"
 #include "pch.hpp"
 #include "Hash.hpp"
+#include "ResourceManager.hpp"
+#include "Engine.hpp"
 
 namespace DarkDescent
 {
@@ -10,7 +12,9 @@ namespace DarkDescent
 
 	class SceneManager: public SubSystem
 	{
-		SUB_SYSTEM_CTORS(SceneManager) {};
+		SUB_SYSTEM_CTORS(SceneManager), 
+			resourceManager_(*engine_.getSubSystem<ResourceManager>())
+		{ };
 
 	protected:
 		virtual void onInitialize() override;
@@ -18,12 +22,12 @@ namespace DarkDescent
 		virtual void onTerminate() override;
 
 	public:
+		void registerScene(const char* path);
 		Scene& loadScene(const char* path);
 
 	private:
+		ResourceManager& resourceManager_;
 		std::optional<Scene*> activeScene_;
 		std::optional<Scene*> loadingScene_;
-
-		std::unordered_map<Hash, Scene> scenes_;
 	};
 }

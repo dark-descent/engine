@@ -24,7 +24,7 @@ namespace DarkDescent
 		}
 	}
 
-	void EventManager::on(Hash hash, SubSystem* owner, EventHandler handler, const void* data) const
+	void EventManager::on(Hash hash, SubSystem* owner, EventHandler handler, void* data) const
 	{
 		if (!handlers_.contains(hash))
 		{

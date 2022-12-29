@@ -21,8 +21,11 @@ namespace DarkDescent::JS
 
 		bool set(const char* key, v8::Local<v8::Value> val, v8::PropertyAttribute attributes = v8::None) const;
 		bool set(v8::Local<v8::String> name,  v8::Local<v8::Value> val, v8::PropertyAttribute attributes = v8::None) const;
-		bool set(const char* name, v8::FunctionCallback callback, v8::Local<v8::Value> data = v8::Local<v8::Value>()) const;
-		bool set(v8::Local<v8::String> name, v8::FunctionCallback callback, v8::Local<v8::Value> data) const;
+
+		bool set(const char* name, v8::FunctionCallback callback, v8::Local<v8::Value> data = v8::Local<v8::Value>(), v8::PropertyAttribute attributes = v8::None) const;
+		bool set(const char* name, v8::FunctionCallback callback, void* data, v8::PropertyAttribute attributes = v8::None) const;
+		bool set(v8::Local<v8::String> name, v8::FunctionCallback callback, v8::Local<v8::Value> data, v8::PropertyAttribute attributes = v8::None) const;
+		bool set(v8::Local<v8::String> name, v8::FunctionCallback callback, void* data, v8::PropertyAttribute attributes = v8::None) const;
 
 	public:
 		const Env& env;

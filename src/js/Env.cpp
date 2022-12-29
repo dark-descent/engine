@@ -9,35 +9,36 @@
 
 namespace DarkDescent::JS
 {
-	Env Env::create(std::size_t index, const bool standAlone)
+	Env Env::create(std::size_t index, ResourceManager& resourceManager)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		return Env(std::move(params), standAlone);
+		return Env(std::move(params), index, resourceManager);
 	}
 
-	Env* Env::createNew(std::size_t index, const bool standAlone)
+	Env* Env::createNew(std::size_t index, ResourceManager& resourceManager)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		return new Env(std::move(params), standAlone);
+		return new Env(std::move(params), index, resourceManager);
 	}
 
-	Env::Env(v8::Isolate::CreateParams&& createParams, std::size_t index, const bool isStandAloneEnv):
+	Env::Env(v8::Isolate::CreateParams&& createParams, std::size_t index, ResourceManager& resourceManager):
 		index(index),
 		createParams_(createParams),
 		isolate_(v8::Isolate::New(createParams_)),
-		moduleLoader_(*this)
+		moduleLoader_(*this, resourceManager)
 	{
 		assert(isolate_->GetNumberOfDataSlots() != 0);
-		
+
 		isolate_->SetData(0, this);
 
-		isolate_->SetAbortOnUncaughtExceptionCallback([](v8::Isolate* isolate) -> bool {
+		isolate_->SetAbortOnUncaughtExceptionCallback([](v8::Isolate* isolate) -> bool
+		{
 			Logger::get().error("Uncaught js exception!");
-			return true;
+		return true;
 		});
 
 		v8::Isolate::Scope isolateScope(isolate_);
@@ -46,31 +47,25 @@ namespace DarkDescent::JS
 		auto ctx = context();
 		v8::Context::Scope contextScope(ctx);
 
+		engineNamespace_.Reset(isolate_, v8::Object::New(isolate_));
+
 		JS::Object global(*this, ctx->Global());
 
 		JS::Console::expose(*this, global);
-		if(!isStandAloneEnv)
-		{
-			JS::Process::expose(*this, global);
-		}
+		JS::Process::expose(*this, global);
 	}
 
 	Env::~Env()
 	{
 		Logger::get().info("Terminating JS::Env...");
 
-		for(const auto& [_, jsClass] : classes_)
+		for (const auto& [_, jsClass] : classes_)
 			delete jsClass;
-		
+
+		engineNamespace_.Reset();
 		context_.Reset();
 		isolate_->Dispose();
 		delete createParams_.array_buffer_allocator;
-	}
-
-	void Env::exposeGlobal(const char* name, v8::Local<v8::Value> val) const
-	{
-		JS::Object global(*this, context()->Global());
-		global.set(name, val);
 	}
 
 	v8::MaybeLocal<v8::Value> Env::readJson(const std::string& source) const

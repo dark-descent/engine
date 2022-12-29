@@ -5,6 +5,7 @@
 #include "js/Env.hpp"
 #include "js/Object.hpp"
 #include "PersistentVector.hpp"
+#include "Engine.hpp"
 
 namespace DarkDescent
 {
@@ -38,7 +39,7 @@ namespace DarkDescent
 			if (!isV8Initialized())
 				initializeV8();
 
-			JS::Env env = JS::Env::create(true);
+			JS::Env env = JS::Env::create(0, nullptr, true);
 			env.run(callback);
 		}
 

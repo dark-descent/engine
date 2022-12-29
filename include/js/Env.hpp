@@ -2,9 +2,11 @@
 
 #include "pch.hpp"
 #include "js/ModuleLoader.hpp"
+#include "js/Object.hpp"
 
 namespace DarkDescent
 {
+	class ResourceManager;
 	class ScriptManager;
 
 	namespace JS
@@ -29,8 +31,8 @@ namespace DarkDescent
 			};
 
 		private:
-			static Env create(std::size_t index, const bool standAlone = false);
-			static Env* createNew(std::size_t index, const bool standAlone = false);
+			static Env create(std::size_t index, ResourceManager& resourceManager);
+			static Env* createNew(std::size_t index, ResourceManager& resourceManager);
 
 		public:
 			static inline const Env& fromIsolate(v8::Isolate* isolate) { return *static_cast<Env*>(isolate->GetData(0)); }
@@ -38,7 +40,7 @@ namespace DarkDescent
 			static inline const Env& fromArgs(const v8::FunctionCallbackInfo<v8::Value>& args) { return fromIsolate(args.GetIsolate()); }
 
 		private:
-			Env(v8::Isolate::CreateParams&& createParams, std::size_t index, const bool isStandAloneEnv = false);
+			Env(v8::Isolate::CreateParams&& createParams, std::size_t index, ResourceManager& resourceManager);
 			Env(const Env&) = delete;
 			Env(Env&&) = delete;
 
@@ -51,6 +53,8 @@ namespace DarkDescent
 
 			inline v8::Isolate* isolate() const { return isolate_; }
 			inline v8::Local<v8::Context> context() const { return context_.Get(isolate_); }
+			inline JS::Object global() const { return JS::Object(*this, context()->Global()); }
+			inline JS::Object engineNamespace() const { return JS::Object(*this, engineNamespace_.Get(isolate_)); }
 
 			v8::MaybeLocal<v8::Value> readJson(const std::string& source) const;
 			v8::MaybeLocal<v8::Value> readJsonFile(const std::filesystem::path& jsonPath) const;
@@ -78,8 +82,6 @@ namespace DarkDescent
 			{
 				return *static_cast<T*>(classes_.at(typeid(T).name()));
 			}
-
-			void exposeGlobal(const char* name, v8::Local<v8::Value>) const;
 			
 			inline bool isLoaded() const { return isLoaded_; }
 			inline const ModuleLoader& moduleLoader() const { return moduleLoader_; }
@@ -90,6 +92,7 @@ namespace DarkDescent
 			v8::Isolate::CreateParams createParams_;
 			v8::Isolate* isolate_;
 			v8::Global<v8::Context> context_;
+			v8::Global<v8::Object> engineNamespace_;
 
 			ModuleLoader moduleLoader_;
 			mutable bool isLoaded_;
