@@ -24,8 +24,8 @@ namespace DarkDescent::JS::SceneManager
 	{
 		JS::Object obj(env);
 		obj.set("registerScene", registerScene, system, v8::PropertyAttribute::ReadOnly);
-		obj.set("registerScene", registerScene, system, v8::PropertyAttribute::ReadOnly);
-		obj.set("registerScene", registerScene, system, v8::PropertyAttribute::ReadOnly);
+		obj.set("loadScene", loadScene, system, v8::PropertyAttribute::ReadOnly);
+		obj.set("getActiveScene", getActiveScene, system, v8::PropertyAttribute::ReadOnly);
 		return *obj;
 	}
 };

@@ -51,6 +51,8 @@ namespace DarkDescent::JS
 
 		JS::Object global(*this, ctx->Global());
 
+		global.set("Engine", *engineNamespace());
+
 		JS::Console::expose(*this, global);
 		JS::Process::expose(*this, global);
 	}

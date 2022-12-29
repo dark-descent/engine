@@ -12,6 +12,7 @@
 #include "Component.hpp"
 #include "RenderSystem.hpp"
 #include "ResourceManager.hpp"
+#include "SceneManager.hpp"
 
 namespace DarkDescent
 {
@@ -102,6 +103,7 @@ namespace DarkDescent
 		initializeSubSystem<GameObjectManager>();
 		initializeSubSystem<WindowManager>();
 		initializeSubSystem<RenderSystem>();
+		initializeSubSystem<SceneManager>();
 
 		for (const auto& [_, system] : subSystems_)
 			system->allInitialized();
