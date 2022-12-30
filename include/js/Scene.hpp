@@ -28,5 +28,6 @@ namespace DarkDescent::JS
 		JS_CLASS_METHOD(onLoad);
 		JS_CLASS_METHOD(onReady);
 		JS_CLASS_METHOD(onUnload);
+		JS_CLASS_METHOD(spawn);
 	};
 }

@@ -15,11 +15,15 @@ namespace DarkDescent
 		using ComponentSize = std::size_t;
 
 	public:
+		constexpr static std::uint8_t UNSET_INDEX = std::numeric_limits<std::uint8_t>::max();
+
 		SUB_SYSTEM_CTORS(ArchManager),
 			componentCounter_(0),
 			registeredComponents_(),
-			components_()
-		{}
+			components_(),
+			activeArchIndex_(0),
+			archMap_({  })
+		{ }
 
 		bool isComponentRegistered(const Hash h)
 		{
@@ -57,6 +61,16 @@ namespace DarkDescent
 			return components_[index];
 		}
 
+		inline std::uint8_t getNextActiveIndex() const
+		{
+			return static_cast<std::uint8_t>(!activeArchIndex_);
+		}
+
+		inline std::uint8_t activeArchIndex() const
+		{
+			return static_cast<std::uint8_t>(activeArchIndex_);
+		}
+
 		inline const ComponentInfo& getComponent(const std::size_t index)
 		{
 			return components_.at(index);
@@ -70,11 +84,22 @@ namespace DarkDescent
 		}
 
 		Arch* getArch(Bitmask bitmask);
+		Arch* getArch(Bitmask bitmask, std::uint8_t mapIndex);
+
 		void registerArch(Bitmask bitmask);
+		void registerArch(Bitmask bitmask, std::uint8_t mapIndex);
 
 		inline Arch* rootArch() { return getArch(0); }
+		inline Arch* rootArch(std::uint8_t mapIndex)
+		{
+			assert(mapIndex != UNSET_INDEX);
+			return getArch(0, mapIndex);
+		}
 
 		Entity allocEntity(Bitmask bitmask);
+		Entity allocEntity(Bitmask bitmask, std::uint8_t mapIndex);
+
+		void swapActiveIndex();
 
 	protected:
 		virtual void onInitialize() override;
@@ -82,10 +107,13 @@ namespace DarkDescent
 		virtual void onTerminate() override;
 
 	private:
+		std::unordered_map<Bitmask, Arch>& activeArchMap() { return archMap_.at(activeArchIndex()); };
+
 		std::size_t componentCounter_;
 		std::array<Hash, 64> registeredComponents_;
 		std::array<ComponentInfo, 64> components_;
 
-		std::unordered_map<Bitmask, Arch> arches_;
+		bool activeArchIndex_;
+		std::array<std::unordered_map<Bitmask, Arch>, 2> archMap_;
 	};
 }

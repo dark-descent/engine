@@ -13,7 +13,7 @@ namespace DarkDescent
 	public:
 		SUB_SYSTEM_CTORS(GameObjectManager), archManager_(nullptr) {}
 
-		GameObject* create();
+		GameObject* create(std::uint8_t archMapIndex);
 
 	protected:
 		virtual void onInitialize() override;

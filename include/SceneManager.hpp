@@ -4,6 +4,7 @@
 #include "pch.hpp"
 #include "Hash.hpp"
 #include "Engine.hpp"
+#include "ArchManager.hpp"
 #include "Scene.hpp"
 
 namespace DarkDescent
@@ -12,7 +13,8 @@ namespace DarkDescent
 
 	class SceneManager: public SubSystem
 	{
-		SUB_SYSTEM_CTORS(SceneManager)
+		SUB_SYSTEM_CTORS(SceneManager),
+			archManager_(*engine_.getSubSystem<ArchManager>())
 		{ };
 
 	protected:
@@ -26,6 +28,7 @@ namespace DarkDescent
 		const std::optional<Scene*>& activeScene() const { return activeScene_; }
 
 	private:
+		ArchManager& archManager_;
 		std::optional<Scene*> activeScene_;
 		std::unordered_map<Hash, Scene> scenes_;
 	};

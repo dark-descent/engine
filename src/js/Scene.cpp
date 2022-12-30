@@ -3,6 +3,7 @@
 #include "js/Env.hpp"
 #include "Engine.hpp"
 #include "SceneManager.hpp"
+#include "Logger.hpp"
 
 namespace DarkDescent::JS
 {
@@ -41,6 +42,12 @@ namespace DarkDescent::JS
 		
 	}
 
+	JS_CLASS_METHOD_IMPL(SceneClass::spawn)
+	{
+		DarkDescent::Scene* scene = JS::getInternalPointer<DarkDescent::Scene>(args);
+		scene->spawn();
+	}
+
 	JS_CREATE_CLASS(SceneClass)
 	{
 		builder.setName("Scene");
@@ -48,6 +55,7 @@ namespace DarkDescent::JS
 		builder.setMethod("onLoad");
 		builder.setMethod("onReady");
 		builder.setMethod("onUnload");
+		builder.setMethod("spawn", spawn);
 		builder.setInternalFieldCount(1);
 	}
 }

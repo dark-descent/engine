@@ -8,6 +8,8 @@ declare module "engine"
 
 		public abstract onLoad(): any;
 		public abstract onUnload(): any;
+
+		public readonly spawn: () => any;
 	}
 
 	export type SceneClass<T extends Scene> = new (name: string) => T;

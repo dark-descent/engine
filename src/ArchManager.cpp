@@ -17,9 +17,11 @@ namespace DarkDescent
 
 	}
 
-	void ArchManager::registerArch(Bitmask bitmask)
+	void ArchManager::registerArch(Bitmask bitmask, std::uint8_t mapIndex)
 	{
-		assert(!arches_.contains(bitmask));
+		assert(mapIndex <= 1);
+		auto& map = archMap_.at(mapIndex);
+		assert(!map.contains(bitmask));
 
 		std::vector<ComponentInfo*> c;
 		std::size_t size = 0;
@@ -29,24 +31,47 @@ namespace DarkDescent
 			std::size_t b = 1ULL << i;
 			if ((bitmask & b) == b)
 			{
-				auto& component = components_.at(i);
+				ComponentInfo& component = components_.at(i);
 				size += component.size;
 				c.emplace_back(std::addressof(component));
 			}
 		}
-		
-		arches_.emplace(std::piecewise_construct, std::forward_as_tuple(bitmask), std::forward_as_tuple(*this, bitmask, size, std::move(c)));
+
+		map.emplace(std::piecewise_construct, std::forward_as_tuple(bitmask), std::forward_as_tuple(*this, bitmask, size, std::move(c)));
+	}
+
+	void ArchManager::registerArch(Bitmask bitmask)
+	{
+		registerArch(bitmask, activeArchIndex_);
+	}
+
+	Arch* ArchManager::getArch(Bitmask bitmask, std::uint8_t mapIndex)
+	{
+		assert(mapIndex <= 1);
+		auto& map = archMap_.at(mapIndex);
+		if (!map.contains(bitmask))
+			registerArch(bitmask, mapIndex);
+		return std::addressof(map.at(bitmask));
 	}
 
 	Arch* ArchManager::getArch(Bitmask bitmask)
 	{
-		if (!arches_.contains(bitmask))
-			registerArch(bitmask);
-		return std::addressof(arches_.at(bitmask));
+		return getArch(bitmask, activeArchIndex_);
+	}
+
+	Entity ArchManager::allocEntity(Bitmask bitmask, std::uint8_t mapIndex)
+	{
+		assert(mapIndex <= 1);
+		return getArch(bitmask, mapIndex)->alloc();
 	}
 
 	Entity ArchManager::allocEntity(Bitmask bitmask)
 	{
 		return getArch(bitmask)->alloc();
+	}
+
+	void ArchManager::swapActiveIndex()
+	{
+		activeArchIndex_ = !activeArchIndex_;
 	}
 }

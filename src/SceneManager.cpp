@@ -51,13 +51,16 @@ namespace DarkDescent
 		}
 
 		Scene& scene = scenes_.at(hash);
-		scene.onLoad();
+		scene.onLoad(archManager_.getNextActiveIndex());
 
-		if(activeScene_.has_value())
-		{
-			activeScene_.value()->onUnload();
-		}
+		Scene* oldScene = activeScene_.has_value() ? activeScene_.value() : nullptr;
+		
 		activeScene_ = std::addressof(scene);
+		archManager_.swapActiveIndex();
+		
+		if(oldScene != nullptr)
+			oldScene->onUnload();
+		
 		return scene;
 	}
 }

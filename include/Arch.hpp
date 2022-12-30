@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pch.hpp"
 #include "ArchBufferPool.hpp"
 
 namespace DarkDescent
@@ -34,8 +35,6 @@ namespace DarkDescent
 	{
 	public:
 		Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<ComponentInfo*>&& components);
-		Arch(const Arch&) = delete;
-		Arch(Arch&&) = delete;
 		~Arch();
 
 	public:
@@ -63,6 +62,11 @@ namespace DarkDescent
 		const ComponentOffset& getComponentOffset(std::size_t bitmask) const;
 
 		inline ArchManager& archManager() const { return archManager_; } 
+
+		std::string log()
+		{
+			return std::format("Arch bitmask = {}, size = {}", bitmask, archSize);	
+		}
 
 	private:
 		ArchManager& archManager_;
