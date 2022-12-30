@@ -13,7 +13,7 @@ namespace DarkDescent
 
 		namespace SceneManager
 		{
-			v8::Local<v8::Object> create(const Env& env, DarkDescent::SceneManager* system);
+			v8::Local<v8::Object> create(const Env& env);
 		}
 	};
 };

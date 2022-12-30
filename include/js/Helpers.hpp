@@ -4,6 +4,7 @@
 
 #include "pch.hpp"
 #include "Concepts.hpp"
+#include "js/Env.hpp"
 
 #define JS_CALLBACK(__NAME__) void __NAME__##wrapped(const JS::Env& env, const v8::FunctionCallbackInfo<v8::Value>& args);\
 void __NAME__ (const v8::FunctionCallbackInfo<v8::Value>& args) { __NAME__##wrapped(JS::Env::fromArgs(args), args); }\
@@ -11,8 +12,6 @@ void __NAME__##wrapped(const JS::Env& env, const v8::FunctionCallbackInfo<v8::Va
 
 namespace DarkDescent::JS
 {
-	class Env;
-	
 	v8::Local<v8::Number> number(const Env& env, uint8_t number);
 	v8::Local<v8::Number> number(const Env& env, uint16_t number);
 	v8::Local<v8::Number> number(const Env& env, uint32_t number);
@@ -82,7 +81,11 @@ namespace DarkDescent::JS
 
 	template<typename T>
 	T* parseExternal(const Env& env, v8::Local<v8::Value> val) { return val->IsExternal() ? static_cast<T*>(val.As<v8::External>()->Value()) : nullptr; }
+
+	template<typename T>
+	T* parseExternal(const v8::FunctionCallbackInfo<v8::Value> &args) { return parseExternal<T>(JS::Env::fromArgs(args), args.Data()); }
 	
+
 	template<typename T>
 	bool parseNumber(v8::Local<v8::Context> ctx, v8::Local<v8::Value> val, T& out)
 	{

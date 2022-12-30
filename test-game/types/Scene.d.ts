@@ -1,12 +1,14 @@
-declare namespace Engine
+declare module "engine"
 {
-	abstract class Scene
+	export abstract class Scene
 	{
 		public readonly name: string;
 
 		public constructor(name: string);
 
-		public onLoad(): any;
-		public onUnload(): any;
+		public abstract onLoad(): any;
+		public abstract onUnload(): any;
 	}
+
+	export type SceneClass<T extends Scene> = new (name: string) => T;
 }

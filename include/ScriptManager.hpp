@@ -57,7 +57,7 @@ namespace DarkDescent
 
 		inline const JS::Env& mainEnv() const { return *envs_.at(0); }
 
-		void initializeGame();
+		bool initializeGame();
 
 	private:
 		PersistentVector<JS::Env*, 8> envs_;

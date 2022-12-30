@@ -7,6 +7,7 @@
 #include "js/Console.hpp"
 #include "ResourceManager.hpp"
 #include "Script.hpp"
+#include "js/EngineModule.hpp"
 
 namespace DarkDescent::JS
 {
@@ -19,7 +20,6 @@ namespace DarkDescent::JS
 
 	ModuleLoader::~ModuleLoader()
 	{
-
 	}
 
 	/*static*/ v8::MaybeLocal<v8::Module> ModuleLoader::importModule(v8::Local<v8::Context> context, v8::Local<v8::String> specifier, v8::Local<v8::FixedArray> import_assertions, v8::Local<v8::Module> referrer)
@@ -30,7 +30,14 @@ namespace DarkDescent::JS
 
 		std::string import = JS::parseString(env, specifier);
 
+		Logger::get().debug("import module ", import);
+
 		std::replace(import.begin(), import.end(), '\\', '/');
+
+		if(EngineModule::isImportString(import))
+		{
+			return EngineModule::create(env);
+		}
 
 		std::filesystem::path importPath = import;
 		std::filesystem::path fromPath;
@@ -56,8 +63,8 @@ namespace DarkDescent::JS
 			bool isValid = false;
 
 			std::array<std::string, 3> resolves = {
-				".ts",
-				".tsx",
+				".js",
+				".jsx",
 				"json"
 			};
 
@@ -155,6 +162,9 @@ namespace DarkDescent::JS
 		std::replace(p.begin(), p.end(), '\\', '/');
 		std::string fileName = path.filename().string();
 
+		
+		Logger::get().debug("Load module ", path.string());
+
 		std::ifstream is(path);
 		std::string codePrefix = std::format("const __dirname = \"{}\"; const __filename = \"{}\";", p.c_str(), fileName.c_str());
 		std::string pathStr = path.string();
@@ -175,6 +185,8 @@ namespace DarkDescent::JS
 		std::replace(p.begin(), p.end(), '\\', '/');
 
 		std::string entry = p + ".native.entry";
+		
+		Logger::get().debug("Load init module ", entry);
 
 		std::string code = std::format("import entry from \"{}\"; {}", p, "entry(process.args);");
 

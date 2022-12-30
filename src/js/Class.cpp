@@ -8,9 +8,9 @@ namespace DarkDescent::JS
 	ObjectWrapper::~ObjectWrapper() { }
 
 	const Env& ObjectWrapper::env() { return env_; };
-	v8::Local<v8::Value> ObjectWrapper::value() { return value_.Get(env_.isolate()); }
+	v8::Local<v8::Value> ObjectWrapper::value() const { return value_.Get(env_.isolate()); }
 
-	void ObjectWrapper::wrap(v8::Local<v8::Value> value)
+	void ObjectWrapper::reset(v8::Local<v8::Value> value)
 	{
 		value_.Reset(env_.isolate(), value);
 		initializeProps();

@@ -7,6 +7,7 @@
 #include "Config.hpp"
 #include "TraceException.hpp"
 #include "EventManager.hpp"
+#include "js/Game.hpp"
 
 namespace DarkDescent
 {
@@ -43,6 +44,7 @@ namespace DarkDescent
 
 	public:
 		void run();
+		void initializeGame(const JS::Env& env, v8::Local<v8::Object> game);
 
 		template<IsSubSystem T>
 		T* getSubSystem() const
@@ -60,6 +62,7 @@ namespace DarkDescent
 		}
 
 		const Config& config() const { return config_; }
+		const std::optional<JS::Game>& game() const { return game_; }
 
 	public:
 		const std::filesystem::path gamePath;
@@ -72,5 +75,6 @@ namespace DarkDescent
 		std::unordered_map<Hash, SubSystem*> subSystems_;
 		std::vector<SubSystem*> initializationOrder_;
 		Config config_;
+		std::optional<JS::Game> game_;
 	};
 }

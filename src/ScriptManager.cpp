@@ -65,11 +65,13 @@ namespace DarkDescent
 		envs_.erase_at(env.index);
 	}
 
-	void ScriptManager::initializeGame()
+	bool ScriptManager::initializeGame()
 	{
 		mainEnv().run([ & ](const JS::Env& env)
 		{
 			env.moduleLoader_.initialize(engine_.config().entry);
 		});
+
+		return engine_.game().has_value();
 	}
 }

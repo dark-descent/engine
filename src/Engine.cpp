@@ -57,10 +57,14 @@ namespace DarkDescent
 
 		if (!std::filesystem::exists(gameJsonPath))
 			throw TraceException("Could not load the game!");
-			
+
 		std::filesystem::path p = (gameJsonPath / "..").lexically_normal();
 
-		instance_.emplace(new Engine(std::move(p), std::move(gameArgs)));
+		Engine* engine = new Engine(std::move(p), std::move(gameArgs));
+
+		if (!instance_.has_value())
+			instance_.emplace(engine);
+
 		return *(instance_.value());
 	}
 
@@ -94,6 +98,8 @@ namespace DarkDescent
 		subSystems_(),
 		initializationOrder_()
 	{
+		instance_.emplace(this);
+
 		const Logger& logger = Logger::get();
 		logger.info("Initializing engine...");
 
@@ -105,10 +111,16 @@ namespace DarkDescent
 		initializeSubSystem<RenderSystem>();
 		initializeSubSystem<SceneManager>();
 
+		sm.addEventHandler(ScriptManager::Events::ENV_CREATED, EVENT_HANDLER()
+		{
+			const JS::Env& env = *static_cast<const JS::Env*>(event.data);
+			env.registerClass<JS::GameClass>();
+		});
+
 		for (const auto& [_, system] : subSystems_)
 			system->allInitialized();
 
-		sm.mainEnv().run([&](const JS::Env& env)
+		sm.mainEnv().run([ & ](const JS::Env& env)
 		{
 			auto jsonPath = gamePath / "game.json";
 			auto json = env.readJsonFile(jsonPath).ToLocalChecked();
@@ -125,6 +137,8 @@ namespace DarkDescent
 			config_.name = JS::parseString(env, read("name").ToLocalChecked());
 			config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
 		});
+
+		sm.initializeGame();
 
 		logger.info("Engine initialized!");
 	}
@@ -144,12 +158,21 @@ namespace DarkDescent
 		logger.info("Engine terminated!");
 	}
 
+	void Engine::initializeGame(const JS::Env& env, v8::Local<v8::Object> gameObject)
+	{
+		assert(!game_.has_value());
+		JS::Game& game = game_.emplace(env);
+		game.reset(gameObject);
+	}
+
 	void Engine::run()
 	{
-		WindowManager* wm = getSubSystem<WindowManager>();
-		ScriptManager* sm = getSubSystem<ScriptManager>();
-
-		sm->initializeGame();
-		wm->enterEventLoop();
+		if (game_.has_value())
+		{
+			getSubSystem<ScriptManager>()->mainEnv().run([&](const JS::Env& env){
+				game_.value().onLoad();
+			});
+			getSubSystem<WindowManager>()->enterEventLoop();
+		}
 	}
 }

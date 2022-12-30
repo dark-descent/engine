@@ -48,6 +48,5 @@ namespace DarkDescent
 	void RenderSystem::onRender(RenderSystem& system, const Event& event)
 	{
 		system.renderers_.at(*static_cast<const std::size_t*>(event.data)).render();
-		Logger::get().info("render!");
 	}
 }

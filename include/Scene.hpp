@@ -2,20 +2,25 @@
 
 #include "pch.hpp"
 #include "Resource.hpp"
+#include "js/Scene.hpp"
 
 namespace DarkDescent
 {
-	struct SceneData
-	{
-		
-	};
-
-	class Scene: public Resource<Scene, SceneData>
+	class Scene
 	{
 	public:
-		Scene(const std::string& path): Resource(path) {}
-		virtual ~Scene() {}
+		Scene(const std::string& name, const JS::Env& env, v8::Local<v8::Value> jsScene);
 
-		virtual void onLoad() {  }
+		virtual ~Scene();
+
+		virtual void onLoad();
+		virtual void onUnload(); 
+
+		const JS::Scene& jsScene() const { return jsScene_; }
+
+		const std::string name;
+
+	private:
+		JS::Scene jsScene_;
 	};
 }

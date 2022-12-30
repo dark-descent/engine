@@ -1,18 +1,13 @@
-declare namespace Engine
+declare module "engine"
 {
-	interface IConfig
+	namespace Engine
 	{
+		type GameType<T extends Game> = new (...args: any[]) => T;
 
+		type InitializeArgs<T extends Game<any>, Args = InferInitializeGameArgs<T>> = Args extends any[] ? [GameType<T>, ...Args] : [GameType<T>];
+
+		export const initialize: <T extends Game<any>>(...args: InitializeArgs<T>) => T;
 	}
 
-	abstract class Game
-	{
-		protected abstract initialize(config: IConfig);
-		protected abstract onLoad(): any;
-		protected abstract onTerminate(): void;
-
-		public start(): void;
-	}
-
-	const initialize: <T extends Game>(type: new (...args: any[]) => T) => Promise<T>;
+	export default Engine;
 }

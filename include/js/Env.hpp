@@ -54,7 +54,6 @@ namespace DarkDescent
 			inline v8::Isolate* isolate() const { return isolate_; }
 			inline v8::Local<v8::Context> context() const { return context_.Get(isolate_); }
 			inline JS::Object global() const { return JS::Object(*this, context()->Global()); }
-			inline JS::Object engineNamespace() const { return JS::Object(*this, engineNamespace_.Get(isolate_)); }
 
 			v8::MaybeLocal<v8::Value> readJson(const std::string& source) const;
 			v8::MaybeLocal<v8::Value> readJsonFile(const std::filesystem::path& jsonPath) const;
@@ -62,14 +61,14 @@ namespace DarkDescent
 			void throwException(const char* error) const;
 
 			template<typename Callback>
-			void run(Callback callback) const
+			inline void run(Callback callback) const
 			{
 				Scope scope(*this);
 				callback(*this);
 			}
 
 			template<typename T>
-			v8::Local<v8::Function> registerClass() const
+			inline v8::Local<v8::Function> registerClass() const
 			{
 				T* jsClass = new T(*this);
 				jsClass->initialize();
@@ -78,9 +77,15 @@ namespace DarkDescent
 			}
 
 			template<typename T>
-			T& getClass() const
+			inline T& getClass() const
 			{
 				return *static_cast<T*>(classes_.at(typeid(T).name()));
+			}
+
+			template<typename T>
+			inline v8::Local<v8::Function> getJSClass() const
+			{
+				return getClass<T>().getClass();
 			}
 			
 			inline bool isLoaded() const { return isLoaded_; }
@@ -92,7 +97,6 @@ namespace DarkDescent
 			v8::Isolate::CreateParams createParams_;
 			v8::Isolate* isolate_;
 			v8::Global<v8::Context> context_;
-			v8::Global<v8::Object> engineNamespace_;
 
 			ModuleLoader moduleLoader_;
 			mutable bool isLoaded_;

@@ -10,8 +10,6 @@ namespace DarkDescent::JS
 	{
 	public:
 		Scene(const Env& env);
-		Scene(const Scene&) = delete;
-		Scene(Scene&&) = delete;
 		virtual ~Scene();
 
 		virtual void initializeProps();

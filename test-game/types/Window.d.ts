@@ -1,6 +1,9 @@
-declare class Window
+declare module "engine"
 {
-	public constructor();
+	export class Window
+	{
+		public constructor();
 
-	public readonly show: () => void;
+		public readonly show: () => void;
+	}
 }

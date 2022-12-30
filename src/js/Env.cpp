@@ -6,6 +6,7 @@
 #include "js/Helpers.hpp"
 #include "js/Process.hpp"
 #include "js/Class.hpp"
+#include "js/EngineNamespace.hpp"
 
 namespace DarkDescent::JS
 {
@@ -38,7 +39,7 @@ namespace DarkDescent::JS
 		isolate_->SetAbortOnUncaughtExceptionCallback([](v8::Isolate* isolate) -> bool
 		{
 			Logger::get().error("Uncaught js exception!");
-		return true;
+			return true;
 		});
 
 		v8::Isolate::Scope isolateScope(isolate_);
@@ -47,11 +48,7 @@ namespace DarkDescent::JS
 		auto ctx = context();
 		v8::Context::Scope contextScope(ctx);
 
-		engineNamespace_.Reset(isolate_, v8::Object::New(isolate_));
-
 		JS::Object global(*this, ctx->Global());
-
-		global.set("Engine", *engineNamespace());
 
 		JS::Console::expose(*this, global);
 		JS::Process::expose(*this, global);
@@ -64,7 +61,6 @@ namespace DarkDescent::JS
 		for (const auto& [_, jsClass] : classes_)
 			delete jsClass;
 
-		engineNamespace_.Reset();
 		context_.Reset();
 		isolate_->Dispose();
 		delete createParams_.array_buffer_allocator;

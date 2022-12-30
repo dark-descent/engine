@@ -12,11 +12,9 @@ namespace DarkDescent
 	{
 		addEventHandler(ScriptManager::Events::ENV_CREATED, EVENT_HANDLER()
 		{
-			assert(data);
 			const JS::Env& env = *static_cast<const JS::Env*>(event.data);
-			env.global().set("Scene", env.registerClass<JS::SceneClass>());
-			env.engineNamespace().set("SceneManager", JS::SceneManager::create(env, static_cast<SceneManager*>(data)));
-		}, this);
+			env.registerClass<JS::SceneClass>();
+		});
 	}
 
 	void SceneManager::onReady()
@@ -26,17 +24,35 @@ namespace DarkDescent
 
 	void SceneManager::onTerminate()
 	{
-
+		scenes_.clear();
 	}
 
-	void SceneManager::registerScene(const char* path)
+	Scene& SceneManager::registerScene(const char* name, const JS::Env& env, v8::Local<v8::Value> scene)
 	{
-		std::string p(path);
-		resourceManager_.registerResource<Scene>(p, p);
+		const Hash hash = Hasher::hash(name);
+		if (!scenes_.contains(hash))
+		{
+			scenes_.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::string(name), env, scene));
+		}
+		return scenes_.at(hash);
 	}
 
-	Scene& SceneManager::loadScene(const char* path)
+	Scene& SceneManager::loadScene(const char* name, const JS::Env& env)
 	{
-		return resourceManager_.getResource<Scene>(path);
+		const Hash hash = Hasher::hash(name);
+		if(!scenes_.contains(hash))
+		{
+			throw TraceException("Could not find scene!");
+		}
+
+		Scene& scene = scenes_.at(hash);
+		scene.onLoad();
+
+		if(activeScene_.has_value())
+		{
+			activeScene_.value()->onUnload();
+		}
+		activeScene_ = std::addressof(scene);
+		return scene;
 	}
 }

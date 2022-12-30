@@ -1,6 +1,7 @@
+import Engine from "engine";
+import { TestGame } from "./Game";
 const entry = async (args) => {
-    const w = new Window();
-    console.log(w);
-	console.log(Engine);
+    console.log("Game entry");
+    Engine.initialize(TestGame, args);
 };
 export default entry;
