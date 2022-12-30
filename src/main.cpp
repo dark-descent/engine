@@ -22,14 +22,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		return 1;
 
 	const Logger& logger = Logger::get();
-	
+
 	logger.info("Logger initialized!");
 
 	try
 	{
 		std::vector<const char*> args;
 
-		for(int i = 0; i < argc; i++)
+		for (int i = 0; i < argc; i++)
 			args.emplace_back(argv[i]);
 
 		auto& engine = Engine::initialize(std::move(args));

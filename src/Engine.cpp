@@ -13,6 +13,9 @@
 #include "RenderSystem.hpp"
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
+#include "TaskScheduler.hpp"
+
+#include <random>
 
 namespace DarkDescent
 {
@@ -104,6 +107,7 @@ namespace DarkDescent
 		logger.info("Initializing engine...");
 
 		initializeSubSystem<ResourceManager>();
+		initializeSubSystem<TaskScheduler>();
 		ScriptManager& sm = initializeSubSystem<ScriptManager>();
 		initializeSubSystem<ArchManager>();
 		initializeSubSystem<GameObjectManager>();
@@ -123,19 +127,19 @@ namespace DarkDescent
 		sm.mainEnv().run([ & ](const JS::Env& env)
 		{
 			auto jsonPath = gamePath / "game.json";
-			auto json = env.readJsonFile(jsonPath).ToLocalChecked();
+		auto json = env.readJsonFile(jsonPath).ToLocalChecked();
 
-			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
-			{
-				if (obj.IsEmpty())
-					obj = json;
-				return JS::getFromObject(env, obj, key);
-			};
+		auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+		{
+			if (obj.IsEmpty())
+				obj = json;
+			return JS::getFromObject(env, obj, key);
+		};
 
-			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
+		Logger::get().debug("Game json: ", JS::Format::parse(env, json));
 
-			config_.name = JS::parseString(env, read("name").ToLocalChecked());
-			config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
+		config_.name = JS::parseString(env, read("name").ToLocalChecked());
+		config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
 		});
 
 		sm.initializeGame();
@@ -165,13 +169,100 @@ namespace DarkDescent
 		game.reset(gameObject);
 	}
 
+
+	std::atomic<size_t> n = 0;
+
+	TASK(test_loop)
+	{
+		Logger::get().info("TASK: test-loop");
+		scheduler->runTask(test_loop);
+		TASK_RETURN;
+	}
+
+	TASK(test4)
+	{
+		Logger::get().info("..................", rand());
+		TASK_RETURN;
+	}
+
+	TASK(test3)
+	{
+		Logger::get().info("XXXXXXXXXXXXXXXXXX", rand());
+		TASK_RETURN;
+	}
+
+	TASK(test2)
+	{
+		TaskInfo jobs[5] = {
+			{ test4 },
+			{ test4 },
+			{ test4 },
+			{ test4 },
+			{ test4 }
+		};
+
+		scheduler->runTasks(jobs, 5);
+
+		TaskInfo jobs2[5] = {
+			{ test3 },
+			{ test3 },
+			{ test3 },
+			{ test3 },
+			{ test3 }
+		};
+
+		Task::Counter* c = scheduler->runTasks(jobs2, 5);
+
+		TASK_AWAIT(c);
+
+		Logger::get().info("TASK 2 done");
+
+		TASK_RETURN;
+	}
+
+	TASK(test)
+	{
+		TaskInfo jobs[5] = {
+			{ test2 },
+			{ test2 },
+			{ test2 },
+			{ test2 },
+			{ test2 }
+		};
+
+		Task::Counter* c = scheduler->runTasks(jobs, 5);
+
+		TASK_AWAIT(c);
+
+		Logger::get().info("TASK 1 done");
+
+		scheduler->runTask(test);
+
+		TASK_RETURN;
+	}
+
 	void Engine::run()
 	{
 		if (game_.has_value())
 		{
-			getSubSystem<ScriptManager>()->mainEnv().run([&](const JS::Env& env){
+			getSubSystem<ScriptManager>()->mainEnv().run([ & ](const JS::Env& env)
+			{
 				game_.value().onLoad();
 			});
+
+			auto& scheduler = *getSubSystem<TaskScheduler>();
+			scheduler.initThreads();
+
+			std::random_device rd;
+			std::mt19937 mt(rd());
+
+			TaskInfo testJobs[2] = {
+				{ test },
+				{ test_loop }
+			};
+
+			scheduler.runTasks(testJobs, 2, false);
+			scheduler.runThreads();
 			getSubSystem<WindowManager>()->enterEventLoop();
 		}
 	}

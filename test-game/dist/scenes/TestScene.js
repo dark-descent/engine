@@ -1,4 +1,4 @@
-import { Scene, SceneManager } from "engine";
+import { Scene } from "engine";
 export class TestScene extends Scene {
     onLoad() {
         console.log(`Scene ${this.name} loading`);
@@ -7,12 +7,6 @@ export class TestScene extends Scene {
         this.spawn();
         this.spawn();
         this.spawn();
-        try {
-            SceneManager.loadScene("test2");
-        }
-        catch (e) {
-            console.warn(e);
-        }
     }
     onUnload() {
         console.log(`Scene ${this.name} unloading`);
