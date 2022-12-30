@@ -31,25 +31,25 @@ namespace DarkDescent::JS::EngineModule
 		{
 			const Env& env = Env::fromContext(context);
 
-			auto isolate = context->GetIsolate();
+		auto isolate = context->GetIsolate();
 
-			auto exportValue = [&](const char* name, v8::Local<v8::Value> val)
-			{
-				module->SetSyntheticModuleExport(env.isolate(), JS::string(env, name), val);
-			};
+		auto exportValue = [ & ](const char* name, v8::Local<v8::Value> val)
+		{
+			module->SetSyntheticModuleExport(env.isolate(), JS::string(env, name), val);
+		};
 
-			exportValue("Scene", env.getJSClass<SceneClass>());
-			exportValue("Game", env.getJSClass<GameClass>());
-			exportValue("Window", env.getJSClass<WindowClass>());
-			exportValue("SceneManager", SceneManager::create(env));
+		exportValue("Scene", env.getJSClass<SceneClass>());
+		exportValue("Game", env.getJSClass<GameClass>());
+		exportValue("Window", env.getJSClass<WindowClass>());
+		exportValue("SceneManager", SceneManager::create(env));
 
-			if (module->SetSyntheticModuleExport(env.isolate(), JS::string(env, "default"), JS::Engine::createNamespace(env)).IsNothing())
-			{
-				Logger::get().error("Could not create default export for module \"engine\"!");
-				return v8::MaybeLocal<v8::Value>(False(isolate));
-			}
+		if (module->SetSyntheticModuleExport(env.isolate(), JS::string(env, "default"), JS::Engine::createNamespace(env)).IsNothing())
+		{
+			Logger::get().error("Could not create default export for module \"", importName, "\"!");
+			return v8::MaybeLocal<v8::Value>(False(isolate));
+		}
 
-			return v8::MaybeLocal<v8::Value>(v8::True(isolate));
+		return v8::MaybeLocal<v8::Value>(v8::True(isolate));
 		});
 
 		v8::Maybe<bool> result = module->InstantiateModule(env.context(), ModuleLoader::importModule);

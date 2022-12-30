@@ -7,6 +7,7 @@ virtual ~CLASS_NAME() { } \
 CLASS_NAME(const char* name, const Engine& engine): SubSystem(name, engine)
 
 #include "EventManager.hpp"
+#include "Logger.hpp"
 
 namespace DarkDescent
 {
@@ -14,6 +15,40 @@ namespace DarkDescent
 
 	class SubSystem
 	{
+	public:
+		struct Logger
+		{
+		public:
+			Logger(const char* name);
+			Logger(const Logger&) = delete;
+			Logger(Logger&&) = delete;
+			~Logger();
+
+			template<typename... Args>
+			void info(Args&&... args) const { logger_.info(prefix_, std::forward<Args>(args)...); }
+
+			template<typename... Args>
+			void warn(Args&&... args) const { logger_.warn(prefix_, std::forward<Args>(args)...); }
+
+			template<typename... Args>
+			void error(Args&&... args) const { logger_.error(prefix_, std::forward<Args>(args)...); }
+
+			template<typename... Args>
+			void exception(Args&&... args) const { logger_.exception(prefix_, std::forward<Args>(args)...); }
+			
+#ifdef _DEBUG
+			template<typename... Args>
+			void debug(Args&&... args) const { logger_.debug(prefix_, std::forward<Args>(args)...); }
+#elif
+			template<typename... Args>
+			void debug(Args&&... args) const {  }
+#endif
+
+		private:
+			const std::string prefix_;
+			const DarkDescent::Logger& logger_;
+		};
+
 	protected:
 		SubSystem(const char* name, const Engine& engine);
 		SubSystem(const SubSystem&) = delete;
@@ -24,11 +59,13 @@ namespace DarkDescent
 		void initialize();
 		void allInitialized();
 		void terminate();
-	
+
 	protected:
 		virtual void onInitialize();
 		virtual void onReady();
 		virtual void onTerminate();
+
+
 
 		void emitEvent(const char* name, void* data = nullptr);
 		void addEventHandler(const char* name, EventHandler eventHandler, void* data = nullptr);
@@ -50,8 +87,9 @@ namespace DarkDescent
 			addEventHandler(static_cast<Hash>(event), eventHandler, data);
 		}
 
-	private:
-		std::string name_;
+	protected:
+		const std::string name;
+		const Logger logger;
 
 	protected:
 		const Engine& engine_;

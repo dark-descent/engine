@@ -5,6 +5,7 @@
 #include "ScriptManager.hpp"
 #include "js/Scene.hpp"
 #include "js/SceneManager.hpp"
+#include "Logger.hpp"
 
 namespace DarkDescent
 {
@@ -29,6 +30,8 @@ namespace DarkDescent
 
 	Scene& SceneManager::registerScene(const char* name, const JS::Env& env, v8::Local<v8::Value> scene)
 	{
+		logger.debug("Registering scene ", name);
+
 		const Hash hash = Hasher::hash(name);
 		if (!scenes_.contains(hash))
 		{
@@ -39,6 +42,8 @@ namespace DarkDescent
 
 	Scene& SceneManager::loadScene(const char* name, const JS::Env& env)
 	{
+		logger.info("Loading scene ", name);
+
 		const Hash hash = Hasher::hash(name);
 		if(!scenes_.contains(hash))
 		{

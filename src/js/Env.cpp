@@ -10,24 +10,25 @@
 
 namespace DarkDescent::JS
 {
-	Env Env::create(std::size_t index, ResourceManager& resourceManager)
+	Env Env::create(std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		return Env(std::move(params), index, resourceManager);
+		return Env(std::move(params), index, logger, resourceManager);
 	}
 
-	Env* Env::createNew(std::size_t index, ResourceManager& resourceManager)
+	Env* Env::createNew(std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager)
 	{
 		using namespace v8;
 		v8::Isolate::CreateParams params;
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		return new Env(std::move(params), index, resourceManager);
+		return new Env(std::move(params), index, logger, resourceManager);
 	}
 
-	Env::Env(v8::Isolate::CreateParams&& createParams, std::size_t index, ResourceManager& resourceManager):
+	Env::Env(v8::Isolate::CreateParams&& createParams, std::size_t index, const SubSystem::Logger& logger,ResourceManager& resourceManager):
 		index(index),
+		logger(logger),
 		createParams_(createParams),
 		isolate_(v8::Isolate::New(createParams_)),
 		moduleLoader_(*this, resourceManager)
@@ -35,12 +36,6 @@ namespace DarkDescent::JS
 		assert(isolate_->GetNumberOfDataSlots() != 0);
 
 		isolate_->SetData(0, this);
-
-		isolate_->SetAbortOnUncaughtExceptionCallback([](v8::Isolate* isolate) -> bool
-		{
-			Logger::get().error("Uncaught js exception!");
-			return true;
-		});
 
 		v8::Isolate::Scope isolateScope(isolate_);
 		v8::HandleScope handleScope(isolate_);
@@ -56,7 +51,7 @@ namespace DarkDescent::JS
 
 	Env::~Env()
 	{
-		Logger::get().info("Terminating JS::Env...");
+		logger.info("terminating JS::Env...");
 
 		for (const auto& [_, jsClass] : classes_)
 			delete jsClass;

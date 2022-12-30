@@ -3,14 +3,26 @@
 
 namespace DarkDescent
 {
-	SubSystem::SubSystem(const char* name, const Engine& engine) : name_(name), engine_(engine) { }
+	SubSystem::Logger::Logger(const char* name):
+		prefix_(std::format("[{}] ", name)),
+		logger_(DarkDescent::Logger::get())
+	{ }
+
+	SubSystem::Logger::~Logger() { }
+
+
+	SubSystem::SubSystem(const char* name, const Engine& engine):
+		name(name),
+		logger(name),
+		engine_(engine)
+	{ }
+
 	SubSystem::~SubSystem() { }
 
 	void SubSystem::initialize()
 	{
-		engine_.logger.info("Initializing ", name_, "...");
+		logger.info("initializing...");
 		onInitialize();
-		engine_.logger.info(name_, " initialized!");
 	}
 
 	void SubSystem::allInitialized()
@@ -20,9 +32,8 @@ namespace DarkDescent
 
 	void SubSystem::terminate()
 	{
-		engine_.logger.info("Terminating ", name_, "...");
+		logger.info("terminating...");
 		onTerminate();
-		engine_.logger.info(name_, " terminated!");
 	}
 
 	void SubSystem::onInitialize() { }
@@ -46,7 +57,7 @@ namespace DarkDescent
 
 	void SubSystem::emitEvent(Hash name, void* data)
 	{
-		Event e { this, data };
+		Event e{ this, data };
 		engine_.eventManager.emit(name, e);
 	}
 
@@ -55,7 +66,7 @@ namespace DarkDescent
 		engine_.eventManager.on(name, this, eventHandler, data);
 	}
 
-	void SubSystem::removeEventHandler(Hash name,  EventHandler eventHandler)
+	void SubSystem::removeEventHandler(Hash name, EventHandler eventHandler)
 	{
 		engine_.eventManager.remove(name, eventHandler);
 	}

@@ -2,7 +2,6 @@
 #include "js/Env.hpp"
 #include "Engine.hpp"
 #include "Utils.hpp"
-#include "Logger.hpp"
 #include "js/Helpers.hpp"
 #include "js/Console.hpp"
 #include "ResourceManager.hpp"
@@ -30,7 +29,7 @@ namespace DarkDescent::JS
 
 		std::string import = JS::parseString(env, specifier);
 
-		Logger::get().debug("import module ", import);
+		env.logger.info("import module ", import);
 
 		std::replace(import.begin(), import.end(), '\\', '/');
 
@@ -82,7 +81,7 @@ namespace DarkDescent::JS
 
 			if (!isValid)
 			{
-				Logger::get().warn("Could not resolve import path for ", importPath.string().c_str(), "!");
+				env.logger.warn("Could not resolve import path for ", importPath.string().c_str(), "!");
 				return v8::MaybeLocal<v8::Module>();
 			}
 		}
@@ -133,7 +132,7 @@ namespace DarkDescent::JS
 
 		if (result.IsNothing())
 		{
-			Logger::get().error("Can't instantiate module.");
+			env.logger.error("Can't instantiate module.");
 			return v8::MaybeLocal<v8::Module>();
 		}
 		else
@@ -163,7 +162,7 @@ namespace DarkDescent::JS
 		std::string fileName = path.filename().string();
 
 		
-		Logger::get().debug("Load module ", path.string());
+		env.logger.info("Load module ", p, fileName);
 
 		std::ifstream is(path);
 		std::string codePrefix = std::format("const __dirname = \"{}\"; const __filename = \"{}\";", p.c_str(), fileName.c_str());
@@ -186,7 +185,7 @@ namespace DarkDescent::JS
 
 		std::string entry = p + ".native.entry";
 		
-		Logger::get().debug("Load init module ", entry);
+		env.logger.info("Load init module ", entry);
 
 		std::string code = std::format("import entry from \"{}\"; {}", p, "entry(process.args);");
 

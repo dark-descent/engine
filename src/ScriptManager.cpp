@@ -48,7 +48,8 @@ namespace DarkDescent
 
 	const JS::Env& ScriptManager::createEnv()
 	{
-		JS::Env* env = envs_.emplace_back(JS::Env::createNew(envs_.getNextIndex(), *engine_.getSubSystem<ResourceManager>()));
+		logger.debug("creating JS::Env");
+		JS::Env* env = envs_.emplace_back(JS::Env::createNew(envs_.getNextIndex(), logger, *engine_.getSubSystem<ResourceManager>()));
 		JS::Env::Scope scope(*env);
 		emitEvent(Events::ENV_CREATED, env);
 		return *env;
@@ -67,6 +68,8 @@ namespace DarkDescent
 
 	bool ScriptManager::initializeGame()
 	{
+		logger.info("initializing game...");
+		
 		mainEnv().run([ & ](const JS::Env& env)
 		{
 			env.moduleLoader_.initialize(engine_.config().entry);

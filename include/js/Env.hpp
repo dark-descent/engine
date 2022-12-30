@@ -3,6 +3,7 @@
 #include "pch.hpp"
 #include "js/ModuleLoader.hpp"
 #include "js/Object.hpp"
+#include "SubSystem.hpp"
 
 namespace DarkDescent
 {
@@ -31,8 +32,8 @@ namespace DarkDescent
 			};
 
 		private:
-			static Env create(std::size_t index, ResourceManager& resourceManager);
-			static Env* createNew(std::size_t index, ResourceManager& resourceManager);
+			static Env create(std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager);
+			static Env* createNew(std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager);
 
 		public:
 			static inline const Env& fromIsolate(v8::Isolate* isolate) { return *static_cast<Env*>(isolate->GetData(0)); }
@@ -40,7 +41,7 @@ namespace DarkDescent
 			static inline const Env& fromArgs(const v8::FunctionCallbackInfo<v8::Value>& args) { return fromIsolate(args.GetIsolate()); }
 
 		private:
-			Env(v8::Isolate::CreateParams&& createParams, std::size_t index, ResourceManager& resourceManager);
+			Env(v8::Isolate::CreateParams&& createParams, std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager);
 			Env(const Env&) = delete;
 			Env(Env&&) = delete;
 
@@ -92,6 +93,7 @@ namespace DarkDescent
 			inline const ModuleLoader& moduleLoader() const { return moduleLoader_; }
 
 			const std::size_t index;
+			const SubSystem::Logger& logger;
 
 		private:
 			v8::Isolate::CreateParams createParams_;
