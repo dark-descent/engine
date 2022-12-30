@@ -40,27 +40,43 @@ namespace DarkDescent
 		return scenes_.at(hash);
 	}
 
-	Scene& SceneManager::loadScene(const char* name, const JS::Env& env)
+	void SceneManager::loadScene(const char* name, const JS::Env& env)
 	{
-		logger.info("Loading scene ", name);
-
 		const Hash hash = Hasher::hash(name);
-		if(!scenes_.contains(hash))
+		if (!scenes_.contains(hash))
 		{
 			throw TraceException("Could not find scene!");
 		}
 
-		Scene& scene = scenes_.at(hash);
-		scene.onLoad(archManager_.getNextActiveIndex());
+		Scene* scene = std::addressof(scenes_.at(hash));
 
-		Scene* oldScene = activeScene_.has_value() ? activeScene_.value() : nullptr;
-		
-		activeScene_ = std::addressof(scene);
-		archManager_.swapActiveIndex();
-		
-		if(oldScene != nullptr)
-			oldScene->onUnload();
-		
-		return scene;
+		if (loadingScene_.has_value())
+		{
+			env.throwException("Cannot load a scene while another scene is loading!");
+			return;
+		}
+
+		Scene* oldScene = activeScene_.value_or(nullptr);
+
+		if (oldScene == scene)
+		{
+			env.throwException("cannot load a scene that is already loaded!");
+			return;
+		}
+		else
+		{
+			loadingScene_ = scene;
+			scene->onLoad(archManager_.getNextActiveIndex());
+			activeScene_ = scene;
+			loadingScene_.reset();
+			archManager_.swapActiveIndex();
+
+			if (oldScene != nullptr)
+			{
+				const std::uint8_t index = oldScene->archMapIndex();
+				oldScene->onUnload();
+				gameObjectManager_.reset(index);
+			}
+		}
 	}
 }

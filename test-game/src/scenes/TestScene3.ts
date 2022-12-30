@@ -1,6 +1,6 @@
-import { Scene, SceneManager } from "engine";
+import { Scene } from "engine";
 
-export class TestScene extends Scene
+export class TestScene3 extends Scene
 {
 	public onLoad()
 	{
@@ -10,15 +10,6 @@ export class TestScene extends Scene
 		this.spawn();
 		this.spawn();
 		this.spawn();
-
-		try
-		{
-			SceneManager.loadScene("test2");
-		}
-		catch(e)
-		{
-			console.warn(e);
-		}
 	}
 
 	public onUnload()

@@ -1,6 +1,8 @@
 import { Game, SceneManager, Window } from "engine";
 import { Maybe } from "./Maybe";
 import { TestScene } from "./scenes/TestScene";
+import { TestScene2 } from "./scenes/TestScene2";
+import { TestScene3 } from "./scenes/TestScene3";
 export class TestGame extends Game {
     window_ = new Maybe();
     onInitialize(args) {
@@ -10,6 +12,8 @@ export class TestGame extends Game {
         console.log("Game loading...");
         // Register all scenes
         SceneManager.registerScene("test", TestScene);
+        SceneManager.registerScene("test2", TestScene2);
+        SceneManager.registerScene("test3", TestScene3);
         // ...
         // ...
         // load the start scene 

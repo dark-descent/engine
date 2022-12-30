@@ -18,7 +18,7 @@ namespace DarkDescent
 		constexpr static std::uint8_t UNSET_INDEX = std::numeric_limits<std::uint8_t>::max();
 
 		SUB_SYSTEM_CTORS(ArchManager),
-			componentCounter_(0),
+			componentCounter_(0), 
 			registeredComponents_(),
 			components_(),
 			activeArchIndex_(0),
@@ -68,7 +68,7 @@ namespace DarkDescent
 
 		inline std::uint8_t activeArchIndex() const
 		{
-			return static_cast<std::uint8_t>(activeArchIndex_);
+			return static_cast<std::uint8_t>(!activeArchIndex_);
 		}
 
 		inline const ComponentInfo& getComponent(const std::size_t index)

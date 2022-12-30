@@ -24,7 +24,8 @@ namespace DarkDescent::JS
 
 	JS_CLASS_METHOD_IMPL(SceneClass::ctor)
 	{
-		
+		JS::Object self(env, args.This());
+		self.set("name", args[0], v8::PropertyAttribute::ReadOnly);
 	}
 
 	JS_CLASS_METHOD_IMPL(SceneClass::onLoad)

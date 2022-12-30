@@ -1,6 +1,8 @@
 import { Game, SceneManager, Window } from "engine";
 import { Maybe } from "./Maybe";
 import { TestScene } from "./scenes/TestScene";
+import { TestScene2 } from "./scenes/TestScene2";
+import { TestScene3 } from "./scenes/TestScene3";
 
 export class TestGame extends Game<[readonly string[]]>
 {
@@ -17,6 +19,8 @@ export class TestGame extends Game<[readonly string[]]>
 
 		// Register all scenes
 		SceneManager.registerScene<TestScene>("test", TestScene);
+		SceneManager.registerScene<TestScene>("test2", TestScene2);
+		SceneManager.registerScene<TestScene>("test3", TestScene3);
 		// ...
 		// ...
 

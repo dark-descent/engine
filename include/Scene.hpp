@@ -16,12 +16,13 @@ namespace DarkDescent
 
 		virtual ~Scene();
 
-		virtual void onLoad(std::uint8_t archIndex);
+		virtual void onLoad(std::uint8_t archMapIndex);
 		virtual void onUnload(); 
 
 		void spawn();
 
 		const JS::Scene& jsScene() const { return jsScene_; }
+		std::uint8_t archMapIndex() const { return archMapIndex_; }
 
 		const std::string name;
 
@@ -29,6 +30,6 @@ namespace DarkDescent
 		ArchManager& archManager_;
 		GameObjectManager& gameObjectManager_;
 		JS::Scene jsScene_;
-		std::uint8_t archIndex_;
+		std::uint8_t archMapIndex_;
 	};
 }

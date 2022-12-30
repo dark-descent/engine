@@ -126,6 +126,17 @@ namespace DarkDescent
 			freeStack_.emplace_back(std::move(handle.index));
 		}
 
+		void reset()
+		{
+			for (auto& buf : buffers_)
+				delete buf;
+
+			buffers_.clear();
+			freeStack_.clear();
+			
+			addBuffer();
+		}
+
 	private:
 		void addBuffer()
 		{

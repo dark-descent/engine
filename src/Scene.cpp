@@ -10,7 +10,8 @@ namespace DarkDescent
 		name(name),
 		archManager_(*Engine::getInstance().getSubSystem<ArchManager>()),
 		gameObjectManager_(*Engine::getInstance().getSubSystem<GameObjectManager>()),
-		jsScene_(env)
+		jsScene_(env),
+		archMapIndex_(ArchManager::UNSET_INDEX)
 	{
 		jsScene.As<v8::Object>()->SetInternalField(0, v8::External::New(env.isolate(), this));
 		jsScene_.reset(jsScene);
@@ -18,20 +19,21 @@ namespace DarkDescent
 
 	Scene::~Scene() { }
 
-	void Scene::onLoad(std::uint8_t archIndex)
+	void Scene::onLoad(std::uint8_t archMapIndex)
 	{
-		archIndex_ = archIndex;
+		Logger::get().debug("Scene::onLoad() -> ", archMapIndex);
+		archMapIndex_ = archMapIndex;
 		jsScene_.onLoad();
 	}
 
 	void Scene::onUnload()
 	{
-		archIndex_ = ArchManager::UNSET_INDEX;
+		archMapIndex_ = ArchManager::UNSET_INDEX;
 		jsScene_.onUnload();
 	}
 
 	void Scene::spawn()
 	{
-		gameObjectManager_.create(archIndex_);
+		gameObjectManager_.create(archMapIndex_);
 	}
 }

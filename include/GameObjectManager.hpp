@@ -14,6 +14,7 @@ namespace DarkDescent
 		SUB_SYSTEM_CTORS(GameObjectManager), archManager_(nullptr) {}
 
 		GameObject* create(std::uint8_t archMapIndex);
+		void reset(std::uint8_t archMapIndex);
 
 	protected:
 		virtual void onInitialize() override;
@@ -22,6 +23,6 @@ namespace DarkDescent
 
 	private:
 		ArchManager* archManager_;
-		PersistentAllocator<GameObject> gameObjects_;
+		std::array<PersistentAllocator<GameObject>, 2> gameObjectsAllocators_;
 	};
 }
