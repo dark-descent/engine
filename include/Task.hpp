@@ -2,57 +2,87 @@
 
 #include "pch.hpp"
 
+#define TASK(NAME) Task NAME(TaskScheduler& scheduler, void* data)
+
 namespace DarkDescent
 {
+	class TaskScheduler;
+
 	struct Task
 	{
-		using Counter = std::atomic<size_t>;
-
-		struct State
-		{
-			Counter* counter = nullptr;
-			bool isDone = false;
-		};
-
-		struct suspend_maybe
-		{
-			bool suspend;
-			suspend_maybe(bool suspend): suspend(suspend){}
-
-			bool await_ready() const noexcept { return suspend; }
-
-			void await_suspend(std::coroutine_handle<>) const noexcept {}
-
-			void await_resume() const noexcept {}
-		};
-
+		using Counter = std::atomic<std::uint32_t>;
+	
 		struct promise_type
 		{
-			State state;
-			promise_type() = default;
-			std::suspend_never return_void()
+			Task get_return_object()
 			{
-				return {};
+				return { std::coroutine_handle<promise_type>::from_promise(*this) };
 			}
-			Task get_return_object() { return { std::coroutine_handle<promise_type>::from_promise(*this) }; }
-			std::suspend_always initial_suspend() { return {}; }
-			std::suspend_never final_suspend() noexcept { return {}; }
-			suspend_maybe yield_value(State s)
+
+			std::suspend_always initial_suspend() const noexcept { return {}; }
+			std::suspend_never final_suspend() const noexcept { return {}; }
+
+			bool await_ready() const noexcept { return false; }
+			void await_suspend(std::coroutine_handle<promise_type>) const noexcept { }
+			void await_resume() const noexcept { }
+
+			void return_void() noexcept
 			{
-				state = s;
-				if(s.counter->load(std::memory_order::acquire) == 0)
-					return suspend_maybe { true };
-				return suspend_maybe { false };
-			};
-			void unhandled_exception() {}
+				isDone_ = true;
+				if (dependencyCounter_ != nullptr)
+					dependencyCounter_->fetch_sub(1, std::memory_order::acq_rel);
+				dependencyCounter_ = nullptr;
+			}
+
+			void unhandled_exception() const { std::abort(); }
+
+			bool isDone() const noexcept { return isDone_; }
+			
+			bool isWaiting() const noexcept
+			{
+				if(isDone_ || (counter_ == nullptr))
+					return false;
+				return counter_->load(std::memory_order::acquire) != 0;
+			}
+
+			void setCounter(Task::Counter* counter)
+			{
+				assert(counter != nullptr);
+				assert(counter_ == nullptr);
+				counter_ = counter;
+			}
+
+			void setDependencyCounter(Task::Counter* counter)
+			{
+				assert(counter != nullptr);
+				assert(dependencyCounter_ == nullptr);
+				dependencyCounter_ = counter;
+			}
+
+			promise_type():
+				isDone_(false),
+				dependencyCounter_(nullptr),
+				counter_(nullptr)
+			{}
+
+		private:
+			bool isDone_;
+			std::atomic<std::uint32_t>* dependencyCounter_;
+			std::atomic<std::uint32_t>* counter_ = 0;
+		};
+		
+		using Handle = std::coroutine_handle<promise_type>;
+
+		struct Info
+		{
+			using Function = Task(*)(TaskScheduler&, void*);
+			Function function;
+			void* arg = nullptr;
 		};
 
-		std::coroutine_handle<promise_type> handle_;
-		Task(std::coroutine_handle<promise_type> handle) : handle_(handle) {  }
+		Task(Handle handle): handle_(handle) { }
 
-		operator std::coroutine_handle<promise_type>() const { return handle_; }
+		Handle handle_;
+		operator Handle() const { return handle_; }
 	};
-
-	using TaskHandle = std::coroutine_handle<Task::promise_type>;
-	using TaskHandlePtr = TaskHandle*;
 };

@@ -42,6 +42,11 @@ namespace DarkDescent
 
 		}
 
+		~PersistentVector()
+		{
+			clear();
+		}
+
 		std::size_t getNextIndex()
 		{
 			if (freeList_.size() > 0)

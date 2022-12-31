@@ -169,76 +169,24 @@ namespace DarkDescent
 		game.reset(gameObject);
 	}
 
-
-	std::atomic<size_t> n = 0;
-
-	TASK(test_loop)
+	TASK(testTask3)
 	{
-		Logger::get().info("TASK: test-loop");
-		scheduler->runTask(test_loop);
-		TASK_RETURN;
+		Logger::get().info("task 3");
+		co_return;
 	}
 
-	TASK(test4)
+	TASK(testTask2)
 	{
-		Logger::get().info("..................", rand());
-		TASK_RETURN;
+		Logger::get().info("task 2 a");
+		co_await scheduler.awaitTask(testTask3);
+		Logger::get().info("task 2 b");
 	}
 
-	TASK(test3)
+	TASK(testTask)
 	{
-		Logger::get().info("XXXXXXXXXXXXXXXXXX", rand());
-		TASK_RETURN;
-	}
-
-	TASK(test2)
-	{
-		TaskInfo jobs[5] = {
-			{ test4 },
-			{ test4 },
-			{ test4 },
-			{ test4 },
-			{ test4 }
-		};
-
-		scheduler->runTasks(jobs, 5);
-
-		TaskInfo jobs2[5] = {
-			{ test3 },
-			{ test3 },
-			{ test3 },
-			{ test3 },
-			{ test3 }
-		};
-
-		Task::Counter* c = scheduler->runTasks(jobs2, 5);
-
-		TASK_AWAIT(c);
-
-		Logger::get().info("TASK 2 done");
-
-		TASK_RETURN;
-	}
-
-	TASK(test)
-	{
-		TaskInfo jobs[5] = {
-			{ test2 },
-			{ test2 },
-			{ test2 },
-			{ test2 },
-			{ test2 }
-		};
-
-		Task::Counter* c = scheduler->runTasks(jobs, 5);
-
-		TASK_AWAIT(c);
-
-		Logger::get().info("TASK 1 done");
-
-		scheduler->runTask(test);
-
-		TASK_RETURN;
+		Logger::get().info("task 1 a");
+		co_await scheduler.awaitTasks({ testTask2 }, 5);
+		Logger::get().info("task 1 b");
 	}
 
 	void Engine::run()
@@ -250,20 +198,14 @@ namespace DarkDescent
 				game_.value().onLoad();
 			});
 
-			auto& scheduler = *getSubSystem<TaskScheduler>();
-			scheduler.initThreads();
-
-			std::random_device rd;
-			std::mt19937 mt(rd());
-
-			TaskInfo testJobs[2] = {
-				{ test },
-				{ test_loop }
-			};
-
-			scheduler.runTasks(testJobs, 2, false);
-			scheduler.runThreads();
 			getSubSystem<WindowManager>()->enterEventLoop();
+
+			auto& s = *getSubSystem<TaskScheduler>();
+
+			s.runTask(testTask);
+
+			while(s.hasPendingTasks())
+				s.executeNext();
 		}
 	}
 }

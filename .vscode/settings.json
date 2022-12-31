@@ -82,7 +82,8 @@
 		"array": "cpp",
 		"map": "cpp",
 		"unordered_set": "cpp",
-		"coroutine": "cpp"
+		"coroutine": "cpp",
+		"random": "cpp"
 	},
 	"cmake.debugConfig": {
 		"args": [
