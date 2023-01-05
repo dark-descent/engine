@@ -169,24 +169,37 @@ namespace DarkDescent
 		game.reset(gameObject);
 	}
 
-	TASK(testTask3)
+	Task<> updateInput()
 	{
-		Logger::get().info("task 3");
+		Logger::get().info("updateInput()");
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(10ms);
 		co_return;
 	}
 
-	TASK(testTask2)
+	Task<> updatePhysics()
 	{
-		Logger::get().info("task 2 a");
-		co_await scheduler.awaitTask(testTask3);
-		Logger::get().info("task 2 b");
+		Logger::get().info("updatePhysics()");
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(30ms);
+		co_return;
 	}
 
-	TASK(testTask)
+	Task<> render()
 	{
-		Logger::get().info("task 1 a");
-		co_await scheduler.awaitTasks({ testTask2 }, 5);
-		Logger::get().info("task 1 b");
+		Logger::get().info("render()");
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(22ms);
+		co_return;
+	}
+
+	Task<> gameLoop(TaskScheduler& scheduler)
+	{
+		co_await updateInput();
+		co_await updatePhysics();
+		scheduler.schedule(gameLoop(scheduler)); // TODO: set a limiter for max frames in flight
+		co_await render();
+		co_return;
 	}
 
 	void Engine::run()
@@ -198,14 +211,11 @@ namespace DarkDescent
 				game_.value().onLoad();
 			});
 
+			auto& scheduler = *getSubSystem<TaskScheduler>();
+
+			scheduler.schedule(gameLoop(scheduler));
+
 			getSubSystem<WindowManager>()->enterEventLoop();
-
-			auto& s = *getSubSystem<TaskScheduler>();
-
-			s.runTask(testTask);
-
-			while(s.hasPendingTasks())
-				s.executeNext();
 		}
 	}
 }

@@ -3,35 +3,34 @@
 #include "pch.hpp"
 #include "SubSystem.hpp"
 
-#include "Task.hpp"
 #include "LockFreeQueue.hpp"
 #include "PersistentVector.hpp"
 #include "Logger.hpp"
-#include "TaskWaitList.hpp"
+#include "Task.hpp"
 
 namespace DarkDescent
 {
 	class TaskScheduler: public SubSystem
 	{
-		struct Awaiter: public std::suspend_always
+	public:
+		struct Queue: public LockFree::Queue<TaskPtr>
 		{
-			void await_suspend(std::coroutine_handle<Task::promise_type> handle)
+			Queue(std::size_t count): LockFree::Queue<TaskPtr>(count), tasksCount_(0) { }
+
+			inline bool isDone() const noexcept
 			{
-				handle.promise().setCounter(counter_);
+				const std::size_t count = tasksCount_.load(std::memory_order::acquire);
+				return count == 0;
 			}
 
-			Awaiter(Task::Counter* counter): std::suspend_always(),
-				counter_(counter)
-			{ }
+			inline void addTaskCount(std::size_t count = 1) noexcept { tasksCount_.fetch_add(count, std::memory_order::acq_rel); };
+			inline void removeTaskCount(std::size_t count = 1) noexcept { tasksCount_.fetch_sub(count, std::memory_order::acq_rel); };
 
 		private:
-			Task::Counter* counter_;
+			std::atomic<std::size_t> tasksCount_;
 		};
 
-		SUB_SYSTEM_CTORS(TaskScheduler),
-			tasksQueue_(1024),
-			atomicCounters_(),
-			waitList_()
+		SUB_SYSTEM_CTORS(TaskScheduler)
 		{ }
 
 	protected:
@@ -39,110 +38,91 @@ namespace DarkDescent
 		virtual void onReady() override;
 		virtual void onTerminate() override;
 
-	public:
-		void executeNext()
-		{
-			Task::Handle handle;
-			if (tasksQueue_.try_pop(handle))
-			{
-				if (handle)
-				{
-					handle.resume();
-					auto& promise = handle.promise();
-					if (promise.isWaiting())
-						waitList_.push(handle);
-					else if (!promise.isDone())
-						tasksQueue_.push(handle);
-					else
-					{
-						waitList_.findAndRelease([ & ](Task::Handle& handle)
-						{
-							if (!handle.promise().isWaiting())
-							{
-								tasksQueue_.push(handle);
-								return true;
-							}
-						return false;
-						});
-					}
-				}
-			}
-		}
-
-		inline bool hasPendingTasks() const { return tasksQueue_.size() > 0; }
-
-		Task::Counter* allocCounter(std::uint32_t count)
-		{
-			return std::addressof(atomicCounters_.emplace_back(count));
-		}
-
-		Task::Counter* allocCounter(std::size_t count)
-		{
-			return allocCounter(static_cast<std::uint32_t>(count));
-		}
-
-		void runTask(Task::Info::Function task, void* arg = nullptr)
-		{
-			tasksQueue_.push(task(*this, nullptr));
-		}
-
-		void runTask(const Task::Info& task)
-		{
-			tasksQueue_.push(task.function(*this, task.arg));
-		}
-
-		void runTasks(const Task::Info& task, std::size_t count)
-		{
-			for (std::size_t i = 0; i < count; i++)
-				tasksQueue_.push(task.function(*this, task.arg));
-		}
-
-		void runTasks(const std::vector<Task::Info>& tasks)
-		{
-			for (auto& task : tasks)
-				tasksQueue_.push(task.function(*this, task.arg));
-		}
-
-		Awaiter awaitTask(Task::Info::Function task, void* arg = nullptr)
-		{
-			std::size_t size = 1;
-			Task::Counter* counter = allocCounter(size);
-			Task::Handle h = task(*this, arg);
-			h.promise().setDependencyCounter(counter);
-			tasksQueue_.push(std::move(h));
-			return { counter };
-		}
-
-		Awaiter awaitTasks(const Task::Info& task, std::size_t count)
-		{
-			Task::Counter* counter = allocCounter(count);
-
-			for (std::size_t i = 0; i < count; i++)
-			{
-				Task::Handle h = task.function(*this, task.arg);
-				h.promise().setDependencyCounter(counter);
-				tasksQueue_.push(std::move(h));
-			}
-			return { counter };
-		}
-
-		Awaiter awaitTasks(const std::vector<Task::Info>& tasks)
-		{
-			Task::Counter* counter = allocCounter(tasks.size());
-
-			for (auto& task : tasks)
-			{
-				Task::Handle h = task.function(*this, task.arg);
-				h.promise().setDependencyCounter(counter);
-				tasksQueue_.push(std::move(h));
-			}
-
-			return { counter };
-		}
-
 	private:
-		LockFree::Queue<Task::Handle> tasksQueue_;
-		PersistentVector<Task::Counter, 1024> atomicCounters_;
-		TaskWaitList<Task::Handle> waitList_;
+		void runNext(Queue& queue);
+
+		void schedule(Queue& queue, TaskPtr taskPtr);
+
+		template<typename T>
+		void buildTasksList(std::vector<TaskPtr>& ptrs, T task)
+		{
+			ptrs.emplace_back(task.handle().address());
+		}
+
+		template<typename T, typename... Tasks>
+		void buildTasksList(std::vector<TaskPtr>& ptrs, T task, Tasks... tasks)
+		{
+			buildTasksList(ptrs, std::forward<T>(task));
+			buildTasksList(ptrs, std::forward<Tasks>(tasks)...);
+		}
+
+	public:
+	template<typename T>
+		void schedule(Task<T> task)
+		{
+			schedule(queue_.value(), task.handle().address());
+		}
+
+		template<typename Task, typename... Tasks>
+		void schedule(Task task, Tasks&&... tasks)
+		{
+			schedule(queue_.value(), task);
+			schedule(queue_.value(), std::forward<Tasks>(tasks)...);
+		}
+
+		template<typename T>
+		void schedule(Queue& queue, Task<T> task)
+		{
+			schedule(queue, task.handle().address());
+		}
+
+		template<typename Task, typename... Tasks>
+		void schedule(Queue& queue, Task task, Tasks&&... tasks)
+		{
+			schedule(queue, task);
+			schedule(queue, std::forward<Tasks>(tasks)...);
+		}
+
+		void execute(Queue& queue);
+		void execute();
+
+		template<typename T>
+		TasksAwaiter awaitTasks(T task)
+		{
+			std::vector<TaskPtr> taskPtrs;
+			buildTasksList(taskPtrs, std::forward<T>(task));
+			return TasksAwaiter(taskPtrs);
+		}
+
+		template<typename... T>
+		TasksAwaiter awaitTasks(T... tasks)
+		{
+			std::vector<TaskPtr> taskPtrs;
+			buildTasksList(taskPtrs, std::forward<T>(tasks)...);
+			return TasksAwaiter(taskPtrs);
+		}
+
+		template<typename Container, typename Callback>
+		TasksAwaiter awaitEach(Container& container, Callback callback)
+		{
+			std::vector<TaskPtr> taskPtrs;
+			for (auto& item : container)
+				buildTasksList(taskPtrs, callback(item));
+			return TasksAwaiter(taskPtrs);
+		}
+
+		template<typename Callback, typename IndexType = std::size_t>
+		TasksAwaiter awaitEach(IndexType count, Callback callback)
+		{
+			std::vector<TaskPtr> taskPtrs;
+			for (IndexType i = 0; i < count; i++)
+				buildTasksList(taskPtrs, callback(i));
+			return TasksAwaiter(taskPtrs);
+		}
+
+	private: 
+		std::optional<Queue> queue_;
+		std::vector<std::thread> workerThreads_;
+		std::atomic<bool> isRunning_;
 	};
 }
