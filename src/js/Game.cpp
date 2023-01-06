@@ -2,6 +2,7 @@
 #include "js/Game.hpp"
 #include "js/Env.hpp"
 #include "Engine.hpp"
+#include "RenderSystem.hpp"
 
 namespace DarkDescent::JS
 {
@@ -22,22 +23,14 @@ namespace DarkDescent::JS
 
 	JS_CLASS_METHOD_IMPL(GameClass::ctor)
 	{
-		
-	}
-
-	JS_CLASS_METHOD_IMPL(GameClass::onInitialize)
-	{
-		
-	}
-
-	JS_CLASS_METHOD_IMPL(GameClass::onLoad)
-	{
-		
-	}
-
-	JS_CLASS_METHOD_IMPL(GameClass::onTerminate)
-	{
-		
+		if(args.Length() >= 1 && args[0]->IsExternal()) [[likely]]
+		{
+			args.This()->SetInternalField(0, args[0]);
+		}
+		else [[unlikely]]
+		{
+			env.throwException("Cannot create engine by calling its constructor!");
+		}
 	}
 
 	JS_CREATE_CLASS(GameClass)
@@ -47,6 +40,7 @@ namespace DarkDescent::JS
 		builder.setMethod("onInitialize");
 		builder.setMethod("onLoad");
 		builder.setMethod("onTerminate");
+		builder.set("window", v8::Undefined(env.isolate()));
 		builder.setInternalFieldCount(1);
 	}
 }

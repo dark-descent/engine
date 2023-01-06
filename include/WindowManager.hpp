@@ -7,6 +7,7 @@
 
 namespace DarkDescent
 {
+	namespace JS { class Env; }
 	class WindowManager: public SubSystem
 	{
 		SUB_SYSTEM_CTORS(WindowManager) { };
@@ -19,7 +20,7 @@ namespace DarkDescent
 		void enterEventLoop();
 	
 	public:
-		std::size_t createWindow(const std::string& title, int width = 640, int height = 480);
+		std::size_t createWindow(const JS::Env& env, v8::Local<v8::Value> config);
 		inline Window& getWindow(std::size_t index) { return windows_.at(index); };
 		inline Window& getWindowFromID(std::uint32_t id) { return windows_.at(idToIndexMap_.at(id)); };
 	private:

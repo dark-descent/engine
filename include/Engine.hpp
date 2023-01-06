@@ -44,7 +44,7 @@ namespace DarkDescent
 
 	public:
 		void run();
-		void initializeGame(const JS::Env& env, v8::Local<v8::Object> game);
+		JS::Game& initializeGame(const JS::Env& env, v8::Local<v8::Object> game, const v8::FunctionCallbackInfo<v8::Value>& args);
 
 		template<IsSubSystem T>
 		T* getSubSystem() const

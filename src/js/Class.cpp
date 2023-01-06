@@ -163,6 +163,4 @@ namespace DarkDescent::JS
 	{
 		return getClass()->CallAsConstructor(env.context(), static_cast<int>(args.size()), args.data());
 	}
-
-
 }

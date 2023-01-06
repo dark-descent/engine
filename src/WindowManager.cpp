@@ -4,6 +4,7 @@
 #include "Engine.hpp"
 #include "ScriptManager.hpp"
 #include "js/Window.hpp"
+#include "js/Env.hpp"
 
 namespace DarkDescent
 {
@@ -56,10 +57,10 @@ namespace DarkDescent
 		return 0;
 	}
 
-	std::size_t WindowManager::createWindow(const std::string& title, int width, int height)
+	std::size_t WindowManager::createWindow(const JS::Env& env, v8::Local<v8::Value> config)
 	{
 		std::size_t index = windows_.getNextIndex();
-		Window& w = windows_.emplace_back(index, Window::Config{ .title = title });
+		Window& w = windows_.emplace_back(env, index, Window::Config::parse(env, config, engine_.config().name.c_str()));
 		idToIndexMap_.insert({ SDL_GetWindowID(w.sdlWindow_), index });
 		emitEvent(Hasher::hash("WINDOW_CREATED"), &index);
 		return index;

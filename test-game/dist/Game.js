@@ -1,22 +1,25 @@
-import { Game, SceneManager, Window } from "engine";
-import { Maybe } from "./Maybe";
+import { Game, SceneManager } from "engine";
 import { TestScene } from "./scenes/TestScene";
+import { SplashScene } from "./scenes/SplashScene";
 export class TestGame extends Game {
-    window_ = new Maybe();
     onInitialize(args) {
         console.log("Initializing game with args", args);
+        return {
+            window: {
+                title: "test",
+                initialState: 1 /* WindowState.MAXIMIZED */,
+                initialHidden: true
+            }
+        };
     }
     onLoad() {
         console.log("Game loading...");
         // Register all scenes
+        SceneManager.registerScene("splash_scene", SplashScene);
         SceneManager.registerScene("test", TestScene);
-        // ...
-        // ...
         // load the start scene 
-        SceneManager.loadScene("test");
-        // setup a window and show it
-        const window = this.window_.reset(new Window());
-        window.show();
+        SceneManager.loadScene("splash_scene");
+        this.window.show();
     }
     onTerminate() {
     }

@@ -1,9 +1,33 @@
 declare module "engine"
 {
-	export class Window
+	const enum WindowState
 	{
-		public constructor();
+		MINIMIZED = 0,
+		MAXIMIZED = 1,
+		UNMAXIMIZED = 2
+	}
 
-		public readonly show: () => void;
+	interface IWindowConfig
+	{
+		title: string;
+		width: number;
+		height: number;
+		minWidth: number;
+		maxWidth: number;
+		minHeight: number;
+		maxHeight: number;
+		resizable: boolean;
+		fullscreenable: boolean;
+		minimizable: boolean;
+		initialState: WindowState;
+		initialHidden: boolean;
+	}
+
+	interface Window
+	{
+		readonly show: () => void;
+		readonly minimize: () => void;
+		readonly maximize: () => void;
+		readonly unmaximize: () => void;
 	}
 }

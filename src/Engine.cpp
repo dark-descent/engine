@@ -14,6 +14,7 @@
 #include "ResourceManager.hpp"
 #include "SceneManager.hpp"
 #include "TaskScheduler.hpp"
+#include "js/Console.hpp"
 
 #include <random>
 
@@ -127,18 +128,18 @@ namespace DarkDescent
 		sm.mainEnv().run([ & ](const JS::Env& env)
 		{
 			auto jsonPath = gamePath / "game.json";
-			auto json = env.readJsonFile(jsonPath).ToLocalChecked();
-	
-			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
-			{
-				if (obj.IsEmpty())
-					obj = json;
-				return JS::getFromObject(env, obj, key);
-			};
-	
-			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
-			config_.name = JS::parseString(env, read("name").ToLocalChecked());
-			config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
+		auto json = env.readJsonFile(jsonPath).ToLocalChecked();
+
+		auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+		{
+			if (obj.IsEmpty())
+				obj = json;
+			return JS::getFromObject(env, obj, key);
+		};
+
+		Logger::get().debug("Game json: ", JS::Format::parse(env, json));
+		config_.name = JS::parseString(env, read("name").ToLocalChecked());
+		config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
 		});
 
 		sm.initializeGame();
@@ -161,11 +162,28 @@ namespace DarkDescent
 		logger.info("Engine terminated!");
 	}
 
-	void Engine::initializeGame(const JS::Env& env, v8::Local<v8::Object> gameObject)
+	JS::Game& Engine::initializeGame(const JS::Env& env, v8::Local<v8::Object> gameObject, const v8::FunctionCallbackInfo<v8::Value>& args)
 	{
 		assert(!game_.has_value());
 		JS::Game& game = game_.emplace(env);
 		game.reset(gameObject);
+		
+		v8::Local<v8::Value> configVal;
+
+		if (args.Length() == 2)
+		{
+			game.onInitialize({ args[1] }).ToLocal(&configVal);
+		}
+		else
+		{
+			game.onInitialize().ToLocal(&configVal);
+		}
+
+		WindowManager& wm = *getSubSystem<WindowManager>();
+		v8::Local<v8::Value> windowConfig = JS::getFromObject(env, configVal, "window").FromMaybe(v8::Object::New(env.isolate()).As<v8::Value>());
+		Window& window = wm.getWindow(wm.createWindow(env, windowConfig));
+		game.setWindow(window.jsObject());
+		return game;
 	}
 
 	Task<> updateInput(std::size_t frame)

@@ -12,20 +12,19 @@ namespace DarkDescent::JS
 
 	void Window::initializeProps()
 	{
-		loadMethod(onLoad_, "onLoad");
-		loadMethod(onClose_, "onClose");
-		loadMethod(onClosed_, "onClosed");
 	}
 
-	JS_METHOD_IMPL(Window::onLoad);
-	JS_METHOD_IMPL(Window::onClose);
-	JS_METHOD_IMPL(Window::onClosed);
 
 	JS_CLASS_METHOD_IMPL(WindowClass::ctor)
 	{
-		auto wm = Engine::getInstance().getSubSystem<WindowManager>();
-		auto windoIndex = wm->createWindow("test");
-		args.This()->SetInternalField(0, v8::External::New(env.isolate(), std::addressof(wm->getWindow(windoIndex))));
+		if(args.Length() >= 0 && args[0]->IsExternal()) [[likely]]
+		{
+			JS::setInternal(args.This(), 0, args[0]);
+		}
+		else [[unlikely]]
+		{
+			env.throwException("Window constructor cannot be called!");
+		}
 	}
 
 	JS_CLASS_METHOD_IMPL(WindowClass::onShow)

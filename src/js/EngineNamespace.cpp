@@ -3,6 +3,7 @@
 #include "js/Object.hpp"
 #include "js/Helpers.hpp"
 #include "Engine.hpp"
+#include "WindowManager.hpp"
 
 namespace DarkDescent::JS::Engine
 {
@@ -18,26 +19,21 @@ namespace DarkDescent::JS::Engine
 		}
 		else
 		{
-			auto engine = JS::parseExternal<DarkDescent::Engine>(args);
-			v8::Local<v8::Value> engineVal;
-			if (!args[0].As<v8::Function>()->CallAsConstructor(env.context(), 0, nullptr).ToLocal(&engineVal))
+			auto engine = JS::parseExternalData<DarkDescent::Engine>(args);
+
+			v8::Local<v8::Value> engineCtorArgs[1] = {
+				v8::External::New(env.isolate(), engine)
+			};
+
+			v8::Local<v8::Value> gameVal;
+			if (!args[0].As<v8::Function>()->CallAsConstructor(env.context(), 1, engineCtorArgs).ToLocal(&gameVal)) [[unlikely]]
 			{
 				env.throwException("Could not construct Game class!");
 			}
-			else
+			else [[likely]]
 			{
-				engine->initializeGame(env, engineVal.As<v8::Object>());
-				
-				if (args.Length() == 2)
-				{
-					engine->game()->onInitialize({ args[1] });
-				}
-				else
-				{
-					engine->game()->onInitialize();
-				}
-
-				args.GetReturnValue().Set(engineVal);
+				engine->initializeGame(env, gameVal.As<v8::Object>(), args);
+				args.GetReturnValue().Set(gameVal);
 			}
 		}
 	}
@@ -47,7 +43,6 @@ namespace DarkDescent::JS::Engine
 		auto enginePtr = std::addressof(DarkDescent::Engine::getInstance());
 		JS::Object engine(env);
 		engine.set("initialize", initialize, enginePtr, v8::PropertyAttribute::ReadOnly);
-		engine.set("test", JS::string(env, "test"), v8::PropertyAttribute::ReadOnly);
 		return *engine;
 	}
 

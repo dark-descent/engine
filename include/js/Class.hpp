@@ -5,9 +5,9 @@
 #include "js/Helpers.hpp"
 
 #define JS_METHOD_DECL(__NAME__) private: v8::Persistent<v8::Function> __NAME__##_; \
-public: void __NAME__(std::initializer_list<v8::Local<v8::Value>> args = {}) const;
+public: v8::MaybeLocal<v8::Value> __NAME__(std::initializer_list<v8::Local<v8::Value>> args = {}) const;
 
-#define JS_METHOD_IMPL(__NAME__) void __NAME__(std::initializer_list<v8::Local<v8::Value>> args) const { __NAME__##_.Get(env_.isolate())->CallAsFunction(env_.context(), value_.Get(env_.isolate()), static_cast<int>(args.size()), const_cast<v8::Local<v8::Value>*>(args.begin())); }
+#define JS_METHOD_IMPL(__NAME__) v8::MaybeLocal<v8::Value> __NAME__(std::initializer_list<v8::Local<v8::Value>> args) const { return __NAME__##_.Get(env_.isolate())->CallAsFunction(env_.context(), value_.Get(env_.isolate()), static_cast<int>(args.size()), const_cast<v8::Local<v8::Value>*>(args.begin())); }
 
 #define JS_CLASS_BODY(__NAME__) public: \
 	__NAME__(const Env& env) : Class(env) { } \
@@ -46,6 +46,24 @@ namespace DarkDescent::JS
 		}
 
 	protected:
+		template<typename IndexType>
+		inline v8::Local<v8::Value> getInternal(IndexType index) const noexcept
+		{
+			return value().As<v8::Object>()->GetInternalField(static_cast<int>(index));
+		}
+
+		template<typename IndexType>
+		inline void setInternal(IndexType index, v8::Local<v8::Value> val) const noexcept
+		{
+			value().As<v8::Object>()->SetInternalField(static_cast<int>(index), val);
+		}
+
+		template<typename IndexType, typename T>
+		inline void setInternal(IndexType index, T* ptr) const noexcept
+		{
+			setInternal<IndexType>(index, v8::External::New(env_.isolate(), ptr));	
+		}
+
 		virtual void initializeProps() = 0;
 
 		void loadMethod(v8::Persistent<v8::Function>& member, const char* objKey);

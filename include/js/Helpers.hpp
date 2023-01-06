@@ -83,18 +83,20 @@ namespace DarkDescent::JS
 	T* parseExternal(const Env& env, v8::Local<v8::Value> val) { return val->IsExternal() ? static_cast<T*>(val.As<v8::External>()->Value()) : nullptr; }
 
 	template<typename T>
-	T* parseExternal(const v8::FunctionCallbackInfo<v8::Value> &args) { return parseExternal<T>(JS::Env::fromArgs(args), args.Data()); }
+	T* parseExternalData(const v8::FunctionCallbackInfo<v8::Value> &args) { return parseExternal<T>(JS::Env::fromArgs(args), args.Data()); }
 	
+	template<typename Index>
+	void setInternal(v8::Local<v8::Value> val, Index index, v8::Local<v8::Value> value) { val.As<v8::Object>()->SetInternalField(index, value); }
 
 	template<typename T>
-	bool parseNumber(v8::Local<v8::Context> ctx, v8::Local<v8::Value> val, T& out)
+	bool parseNumber(const JS::Env& env, v8::Local<v8::Value> val, T& out)
 	{
 		if(val.IsEmpty())
 			return false;
 			
 		if(val->IsNumber())
 		{
-			out = static_cast<T>(val.As<v8::Number>()->IntegerValue(ctx).ToChecked());
+			out = static_cast<T>(val.As<v8::Number>()->IntegerValue(env.context()).ToChecked());
 			return true;
 		}
 		else if(val->IsBigInt())
