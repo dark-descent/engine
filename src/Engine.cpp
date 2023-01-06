@@ -127,19 +127,18 @@ namespace DarkDescent
 		sm.mainEnv().run([ & ](const JS::Env& env)
 		{
 			auto jsonPath = gamePath / "game.json";
-		auto json = env.readJsonFile(jsonPath).ToLocalChecked();
-
-		auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
-		{
-			if (obj.IsEmpty())
-				obj = json;
-			return JS::getFromObject(env, obj, key);
-		};
-
-		Logger::get().debug("Game json: ", JS::Format::parse(env, json));
-
-		config_.name = JS::parseString(env, read("name").ToLocalChecked());
-		config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
+			auto json = env.readJsonFile(jsonPath).ToLocalChecked();
+	
+			auto read = [ & ](const char* key, v8::Local<v8::Value> obj = v8::Local<v8::Value>())
+			{
+				if (obj.IsEmpty())
+					obj = json;
+				return JS::getFromObject(env, obj, key);
+			};
+	
+			Logger::get().debug("Game json: ", JS::Format::parse(env, json));
+			config_.name = JS::parseString(env, read("name").ToLocalChecked());
+			config_.entry = JS::parseString(env, read("entry").ToLocalChecked());
 		});
 
 		sm.initializeGame();
@@ -169,37 +168,43 @@ namespace DarkDescent
 		game.reset(gameObject);
 	}
 
-	Task<> updateInput()
+	Task<> updateInput(std::size_t frame)
 	{
-		Logger::get().info("updateInput()");
-		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(10ms);
+		// Logger::get().info("updateInput() frame: ", frame);
 		co_return;
 	}
 
-	Task<> updatePhysics()
+	Task<> updatePhysics(std::size_t frame)
 	{
-		Logger::get().info("updatePhysics()");
-		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(30ms);
+		// Logger::get().info("updatePhysics() frame: ", frame);
 		co_return;
 	}
 
-	Task<> render()
+	Task<> render(std::size_t frame)
 	{
-		Logger::get().info("render()");
-		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(22ms);
+		Logger::get().info("render() frame: ", frame);
 		co_return;
 	}
 
-	Task<> gameLoop(TaskScheduler& scheduler)
+	bool secondLoopTaken = false;
+
+	Task<> gameLoop(TaskScheduler& scheduler, const std::size_t frame)
 	{
-		co_await updateInput();
-		co_await updatePhysics();
-		scheduler.schedule(gameLoop(scheduler)); // TODO: set a limiter for max frames in flight
-		co_await render();
-		co_return;
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(500ms);
+		co_await updateInput(frame);
+		co_await updatePhysics(frame);
+		co_await render(frame);
+		scheduler.schedule(gameLoop(scheduler, frame)); // reloop for this frame
+	}
+
+	Task<> gameLoopSetup(TaskScheduler& scheduler)
+	{
+		co_await updateInput(0);
+		co_await updatePhysics(0);
+		scheduler.schedule(gameLoop(scheduler, 1));
+		co_await render(0);
+		scheduler.schedule(gameLoop(scheduler, 0));
 	}
 
 	void Engine::run()
@@ -213,7 +218,7 @@ namespace DarkDescent
 
 			auto& scheduler = *getSubSystem<TaskScheduler>();
 
-			scheduler.schedule(gameLoop(scheduler));
+			scheduler.schedule(gameLoopSetup(scheduler));
 
 			getSubSystem<WindowManager>()->enterEventLoop();
 		}

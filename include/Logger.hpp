@@ -149,13 +149,17 @@ namespace DarkDescent
 		template <typename T>
 		void debug(T arg) const
 		{
+#ifdef _DEBUG
 			log(LogSeverity::DEBUG, arg);
+#endif
 		}
 
 		template <typename T, typename... Rest>
 		void debug(T arg, Rest... rest) const
 		{
+#ifdef _DEBUG
 			log(LogSeverity::DEBUG, arg, rest...);
+#endif
 		}
 
 

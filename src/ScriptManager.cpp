@@ -11,7 +11,7 @@ namespace DarkDescent
 	void ScriptManager::initializeV8()
 	{
 		assert(!isV8Initialized());
-		platform_ = v8::platform::NewDefaultPlatform();
+		platform_ = v8::platform::NewSingleThreadedDefaultPlatform();
 		v8::V8::InitializePlatform(platform_.get());
 		v8::V8::Initialize();
 	}

@@ -13,7 +13,7 @@ namespace DarkDescent::JS
 	Env Env::create(std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager)
 	{
 		using namespace v8;
-		v8::Isolate::CreateParams params;
+		v8::Isolate::CreateParams params {};
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
 		return Env(std::move(params), index, logger, resourceManager);
 	}
@@ -21,7 +21,7 @@ namespace DarkDescent::JS
 	Env* Env::createNew(std::size_t index, const SubSystem::Logger& logger, ResourceManager& resourceManager)
 	{
 		using namespace v8;
-		v8::Isolate::CreateParams params;
+		v8::Isolate::CreateParams params {};
 		params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
 		return new Env(std::move(params), index, logger, resourceManager);
 	}

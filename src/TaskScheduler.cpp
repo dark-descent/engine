@@ -14,7 +14,10 @@ namespace DarkDescent
 			{
 				auto& queue = queue_.value();
 				while(isRunning_.load(std::memory_order::acquire))
-					execute(queue);
+				{
+					if(!queue.isDone())
+						runNext(queue);
+				}
 			});
 		}
 	}

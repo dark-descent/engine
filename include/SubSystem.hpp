@@ -39,7 +39,7 @@ namespace DarkDescent
 #ifdef _DEBUG
 			template<typename... Args>
 			void debug(Args&&... args) const { logger_.debug(prefix_, std::forward<Args>(args)...); }
-#elif
+#else
 			template<typename... Args>
 			void debug(Args&&... args) const {  }
 #endif
