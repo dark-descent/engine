@@ -188,25 +188,21 @@ namespace DarkDescent
 
 	Task<bool> pumpSDLMessages(std::size_t frame, WindowManager& windowManager)
 	{
-		// printf("pumpSDLMessages() frame: %zu\n", frame);
 		co_return windowManager.pumpEvents();
 	}
 
 	Task<> updateInput(std::size_t frame)
 	{
-		// printf("updateInput() frame: %zu\n", frame);
 		co_return;
 	}
 
 	Task<> updatePhysics(std::size_t frame)
 	{
-		// printf("updatePhysics() frame: %zu\n", frame);
 		co_return;
 	}
 
 	Task<> render(std::size_t frame)
 	{
-		// printf("render() frame: %zu\n", frame);
 		co_return;
 	}
 
@@ -215,45 +211,25 @@ namespace DarkDescent
 
 	Task<> gameLoop(TaskScheduler& scheduler, WindowManager& windowManager, const std::size_t frame)
 	{
-		// using namespace std::chrono_literals;
-		// // std::this_thread::sleep_for(500ms);
-
-		// const bool resume = co_await pumpSDLMessages(frame, windowManager);
-		// if (resume)
-		// {
-		// 	co_await updateInput(frame);
-		// 	co_await updatePhysics(frame);
-		// 	co_await render(frame);
-		// 	scheduler.schedule(gameLoop(scheduler, windowManager, frame)); // reloop for this frame
-		// }
-		// else
-		// {
-		// 	puts("stop :D");
-		// }
-		// co_await pumpSDLMessages(frame, windowManager);
 		if (co_await pumpSDLMessages(frame, windowManager))
 		{
-			// printf("pumpSDLMessages returned %s\n", loop ? "true" : "false");
 			co_await updateInput(frame);
 			co_await updatePhysics(frame);
 			co_await render(frame);
-			scheduler.schedule(gameLoop(scheduler, windowManager, frame + 1));
+			scheduler.schedule(gameLoop(scheduler, windowManager, frame));
 		}
-		// Logger::get().info("loop() frame: ", frame, " done");
-		// if (frame == 0)
 	}
 
 	Task<> gameLoopSetup(TaskScheduler& scheduler, WindowManager& windowManager)
 	{
-		// const bool resume = co_await pumpSDLMessages(0, windowManager);
-		// if (resume)
-		// {
-		// 	co_await updateInput(0);
-		// 	scheduler.schedule(gameLoop(scheduler, windowManager, 1));
-		// 	co_await updatePhysics(0);
-		// 	co_await render(0);
-		// 	scheduler.schedule(gameLoop(scheduler, windowManager, 0));
-		// }
+		if (co_await pumpSDLMessages(0, windowManager))
+		{
+			co_await updateInput(0);
+			co_await updatePhysics(0);
+			scheduler.schedule(gameLoop(scheduler, windowManager, 1));
+			co_await render(0);
+			scheduler.schedule(gameLoop(scheduler, windowManager, 0));
+		}
 		co_return;
 	}
 
