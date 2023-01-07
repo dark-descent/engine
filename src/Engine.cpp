@@ -4,7 +4,7 @@
 #include "js/Helpers.hpp"
 #include "Utils.hpp"
 #include "js/Format.hpp"
-#include "TransformComponent.hpp"
+#include "Transform.hpp"
 #include "ScriptManager.hpp"
 #include "WindowManager.hpp"
 #include "ArchManager.hpp"
@@ -201,34 +201,27 @@ namespace DarkDescent
 		co_return;
 	}
 
-	Task<> render(std::size_t frame)
-	{
-		co_return;
-	}
 
-	bool secondLoopTaken = false;
-	bool loop = true;
-
-	Task<> gameLoop(TaskScheduler& scheduler, WindowManager& windowManager, const std::size_t frame)
+	Task<> Engine::gameLoop(TaskScheduler& scheduler, WindowManager& windowManager, RenderSystem& renderSystem, const std::size_t frame)
 	{
 		if (co_await pumpSDLMessages(frame, windowManager))
 		{
 			co_await updateInput(frame);
 			co_await updatePhysics(frame);
-			co_await render(frame);
-			scheduler.schedule(gameLoop(scheduler, windowManager, frame));
+			co_await renderSystem.render(frame, scheduler);
+			scheduler.schedule(gameLoop(scheduler, windowManager, renderSystem, frame));
 		}
 	}
 
-	Task<> gameLoopSetup(TaskScheduler& scheduler, WindowManager& windowManager)
+	Task<> Engine::gameLoopSetup(TaskScheduler& scheduler, WindowManager& windowManager, RenderSystem& renderSystem)
 	{
 		if (co_await pumpSDLMessages(0, windowManager))
 		{
 			co_await updateInput(0);
 			co_await updatePhysics(0);
-			scheduler.schedule(gameLoop(scheduler, windowManager, 1));
-			co_await render(0);
-			scheduler.schedule(gameLoop(scheduler, windowManager, 0));
+			scheduler.schedule(gameLoop(scheduler, windowManager, renderSystem, 1));
+			co_await renderSystem.render(0, scheduler);
+			scheduler.schedule(gameLoop(scheduler, windowManager, renderSystem, 0));
 		}
 		co_return;
 	}
@@ -236,7 +229,7 @@ namespace DarkDescent
 	void Engine::run()
 	{
 		if (game_.has_value())
-		{
+		{                         
 			getSubSystem<ScriptManager>()->mainEnv().run([ & ](const JS::Env& env)
 			{
 				game_.value().onLoad();
@@ -244,8 +237,9 @@ namespace DarkDescent
 
 			auto& scheduler = *getSubSystem<TaskScheduler>();
 			auto& windowManager = *getSubSystem<WindowManager>();
+			auto& renderSystem = *getSubSystem<RenderSystem>();
 
-			scheduler.schedule(gameLoop(scheduler, windowManager, 0));
+			scheduler.schedule(gameLoopSetup(scheduler, windowManager, renderSystem));
 			scheduler.execute();
 		}
 	}

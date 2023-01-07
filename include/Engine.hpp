@@ -8,9 +8,14 @@
 #include "TraceException.hpp"
 #include "EventManager.hpp"
 #include "js/Game.hpp"
+#include "Task.hpp"
 
 namespace DarkDescent
 {
+	class TaskScheduler;
+	class WindowManager;
+	class RenderSystem;
+
 	class Engine
 	{
 	private:
@@ -63,6 +68,10 @@ namespace DarkDescent
 
 		const Config& config() const { return config_; }
 		const std::optional<JS::Game>& game() const { return game_; }
+
+	private:
+		Task<> gameLoop(TaskScheduler& scheduler, WindowManager& windowManager, RenderSystem& renderSystem, const std::size_t frame);
+		Task<> gameLoopSetup(TaskScheduler& scheduler, WindowManager& windowManager, RenderSystem& renderSystem);
 
 	public:
 		const std::filesystem::path gamePath;

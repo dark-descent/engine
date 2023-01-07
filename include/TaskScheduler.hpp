@@ -57,7 +57,7 @@ namespace DarkDescent
 		}
 
 	public:
-	template<typename T>
+		template<typename T>
 		void schedule(Task<T> task)
 		{
 			schedule(queue_.value(), task.handle().address());
@@ -102,6 +102,26 @@ namespace DarkDescent
 			return TasksAwaiter(taskPtrs);
 		}
 
+		template<typename T>
+		TasksAwaiter awaitTasks(std::vector<Task<T>>& tasks)
+		{
+			const size_t l = tasks.size();
+			std::vector<TaskPtr> taskPtrs(l);
+			for (std::size_t i = 0; i < l; i++)
+				taskPtrs[i] = tasks.at(i).handle().address();
+			return TasksAwaiter(taskPtrs);
+		}
+
+		template<>
+		TasksAwaiter awaitTasks(std::vector<Task<>>& tasks)
+		{
+			const size_t l = tasks.size();
+			std::vector<TaskPtr> taskPtrs(l);
+			for (std::size_t i = 0; i < l; i++)
+				taskPtrs[i] = tasks.at(i).handle().address();
+			return TasksAwaiter(taskPtrs);
+		}
+
 		template<typename Container, typename Callback>
 		TasksAwaiter awaitEach(Container& container, Callback callback)
 		{
@@ -120,7 +140,7 @@ namespace DarkDescent
 			return TasksAwaiter(taskPtrs);
 		}
 
-	private: 
+	private:
 		std::optional<Queue> queue_;
 		std::vector<std::thread> workerThreads_;
 		std::atomic<bool> isRunning_;

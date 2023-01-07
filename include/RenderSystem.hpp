@@ -4,9 +4,14 @@
 #include "SubSystem.hpp"
 #include "Renderer.hpp"
 #include "PersistentVector.hpp"
+#include "Task.hpp"
 
 namespace DarkDescent
 {
+	class ArchManager;
+	class TaskScheduler;
+	class ArchBuffer;
+	
 	class RenderSystem: public SubSystem
 	{
 		SUB_SYSTEM_CTORS(RenderSystem),
@@ -25,9 +30,12 @@ namespace DarkDescent
 	private:
 		static void onCreate(RenderSystem& system, const Event& event);
 		static void onDestroy(RenderSystem& system, const Event& event);
-		static void onRender(RenderSystem& system, const Event& event);
 
-		PersistentVector<Renderer, 2> renderers_;
+		Task<void> renderSprites(ArchBuffer& buffer, const std::size_t transform, const std::size_t spriteRenderer);
+		Task<void> render(std::size_t frame, TaskScheduler& scheduler);
+
+		std::vector<Renderer*> renderers_;
 		Renderer* gameRenderer_;
+		ArchManager* archManager_;
 	};
 }

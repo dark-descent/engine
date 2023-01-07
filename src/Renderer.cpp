@@ -22,10 +22,8 @@ namespace DarkDescent
 		if (glewInit() != GLEW_OK)
 			throw TraceException("Could not initialize glew!");
 
-
 		glGenVertexArrays(1, &vertexArrayID_);
 		glBindVertexArray(vertexArrayID_);
-
 
 		glGenBuffers(1, &vertexbuffer_);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_);
@@ -35,9 +33,8 @@ namespace DarkDescent
 	void Renderer::render()
 	{
 		assert(window_ != nullptr);
+
 		glViewport(0, 0, window_->width(), window_->height());
-		// glClearColor(1.f, 0.1f, 0.1f, 1.f);
-		// glClear(GL_COLOR_BUFFER_BIT);
 		glClear( GL_COLOR_BUFFER_BIT );
 
 		glEnableVertexAttribArray(0);

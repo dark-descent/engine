@@ -5,7 +5,8 @@ namespace DarkDescent
 	ArchBuffer::ArchBuffer(std::size_t count, std::size_t archSize):
 		buffer_(nullptr),
 		gameObjectBuffer_(static_cast<GameObjectHandle*>(_aligned_malloc(sizeof(GameObjectHandle)* count, 0x40))),
-		ptr_(0)
+		ptr_(0),
+		archSize_(archSize)
 	{
 		if (archSize > 0)
 		{
@@ -59,5 +60,10 @@ namespace DarkDescent
 	GameObjectHandle* ArchBufferPool::getGameObject(const Entity& entity)
 	{
 		return &buffers_[entity.bufferIndex]->gameObjectBuffer_[entity.index];
+	}
+
+	std::size_t ArchBufferPool::getCount() const
+	{
+		return (ptr_ * bufferCapacity_) + buffers_[ptr_]->ptr_;	
 	}
 }

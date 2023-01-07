@@ -18,7 +18,7 @@ namespace DarkDescent
 		constexpr static std::uint8_t UNSET_INDEX = std::numeric_limits<std::uint8_t>::max();
 
 		SUB_SYSTEM_CTORS(ArchManager),
-			componentCounter_(0), 
+			componentCounter_(0),
 			registeredComponents_(),
 			components_(),
 			activeArchIndex_(0),
@@ -100,6 +100,27 @@ namespace DarkDescent
 		Entity allocEntity(Bitmask bitmask, std::uint8_t mapIndex);
 
 		void swapActiveIndex();
+
+		template<class... T>
+		std::vector<Arch*> queryArches()
+		{
+			return queryArches(getComponentsBitmask<T...>());
+		}
+
+		std::vector<Arch*> queryArches(const Bitmask bitmask)
+		{
+			std::vector<Arch*> arches;
+
+			for (auto& [key, arch] : activeArchMap())
+			{
+				if ((key & bitmask) == bitmask)
+				{
+					arches.emplace_back(std::addressof(arch));
+				}
+			}
+
+			return arches;
+		}
 
 	protected:
 		virtual void onInitialize() override;

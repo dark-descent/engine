@@ -3,13 +3,16 @@
 #include "ArchManager.hpp"
 #include "Logger.hpp"
 
+#ifndef ARCH_BUFFER_CAPACITY
+#define ARCH_BUFFER_CAPACITY 16
+#endif
 namespace DarkDescent
 {
 	Arch::Arch(ArchManager& archManager, std::size_t bitmask, std::size_t archSize, std::vector<ComponentInfo*>&& components):
 		bitmask(bitmask),
 		archSize(archSize),
 		archManager_(archManager),
-		bufferPool_(archSize, 1024),
+		bufferPool_(archSize, ARCH_BUFFER_CAPACITY),
 		components_(components),
 		offsets_(components.size(), { 0, 0 })
 	{

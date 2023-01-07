@@ -61,6 +61,9 @@ namespace DarkDescent
 		const ComponentOffset& getComponentOffset(const ComponentInfo& component) const;
 		const ComponentOffset& getComponentOffset(std::size_t bitmask) const;
 
+		template<typename Component>
+		const ComponentOffset& getComponentOffset() const { return getComponentOffset(Component::bitmask); }
+
 		inline ArchManager& archManager() const { return archManager_; } 
 
 		std::string log()
@@ -68,6 +71,8 @@ namespace DarkDescent
 			return std::format("Arch bitmask = {}, size = {}", bitmask, archSize);	
 		}
 
+		inline const ArchBufferPool& bufferPool() const noexcept { return bufferPool_; };
+		
 	private:
 		ArchManager& archManager_;
 		ArchBufferPool bufferPool_;
