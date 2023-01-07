@@ -4,7 +4,6 @@
 
 namespace DarkDescent
 {
-
 	using TaskPtr = void*;
 
 	template<typename T = void>
@@ -17,6 +16,20 @@ namespace DarkDescent
 
 	struct TaskPromiseBase
 	{
+		struct Allocator
+		{
+			static void* alloc(std::size_t size)
+			{
+				// printf("----- alloc coroutine size: %zu\n", size); 
+				return ::malloc(size);
+			}
+			static void free(void* ptr, std::size_t size)
+			{
+				// printf("-----  free coroutine size: %zu\n", size); 
+				::free(ptr);
+			};
+		};
+
 		std::suspend_always initial_suspend() const noexcept
 		{
 			return {};
@@ -39,6 +52,27 @@ namespace DarkDescent
 		std::optional<std::exception_ptr> exception_ = {};
 		std::coroutine_handle<TaskPromiseBase> parentCoroutine_ = nullptr;
 		TasksAwaiter* tasksAwaiter_ = nullptr;
+
+		TaskPromiseBase()
+		{
+			// puts("TaskPromise()");
+		}
+
+
+		~TaskPromiseBase()
+		{
+			// puts("~TaskPromise()");
+		}
+
+		void* operator new(std::size_t size)
+		{
+			return Allocator::alloc(size);
+		}
+
+		void operator delete(void* ptr, std::size_t size)
+		{
+			return Allocator::free(ptr, size);
+		}
 	};
 
 	template<>
@@ -106,22 +140,23 @@ namespace DarkDescent
 		std::optional<T> value_;
 	};
 
-
 	struct TasksAwaiter
 	{
 		void await_resume() const noexcept
 		{
-
+			// puts("await_resume void");
 		}
 
 		template<typename T>
 		void await_suspend(std::coroutine_handle<T> caller)
 		{
+			// puts("await_suspend");
 			caller.promise().tasksAwaiter_ = this;
 		}
 
 		bool await_ready()
 		{
+			// puts("await_ready");
 			return doneCount_.load(std::memory_order::acquire) == 0;
 		}
 
@@ -130,8 +165,32 @@ namespace DarkDescent
 			doneCount_(tasks_.size())
 		{ }
 
+		~TasksAwaiter()
+		{
+			// puts("~TasksAwaiter()");
+			for (auto t : tasks_)
+			{
+				auto h = std::coroutine_handle<TaskPromiseBase>::from_address(t);
+				h.destroy();
+			}
+
+		}
+
 		std::vector<TaskPtr> tasks_;
 		std::atomic<std::size_t> doneCount_;
+	};
+
+	template<typename T>
+	struct SingleTaskAwaiter: public TasksAwaiter
+	{
+		T await_resume() const noexcept
+		{
+			// puts("await_resume T");
+			std::coroutine_handle<TaskPromise<T>> a = std::coroutine_handle<TaskPromise<T>>::from_address(tasks_.at(0));
+			return a.promise().value_.value();
+		}
+
+		SingleTaskAwaiter(std::vector<TaskPtr> tasks): TasksAwaiter(tasks) { }
 	};
 
 	template<>
@@ -171,9 +230,9 @@ namespace DarkDescent
 		Task() noexcept: handle_(nullptr) { };
 		Task(std::coroutine_handle<promise_type> handle) noexcept: handle_(handle) { }
 
-		TasksAwaiter operator co_await()
+		SingleTaskAwaiter<T> operator co_await()
 		{
-			return TasksAwaiter({ handle_.address() });
+			return SingleTaskAwaiter<T>({ handle_.address() });
 		}
 
 		std::coroutine_handle<promise_type> handle() const noexcept { return handle_; };
@@ -181,5 +240,4 @@ namespace DarkDescent
 	private:
 		std::coroutine_handle<promise_type> handle_;
 	};
-
 }

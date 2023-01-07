@@ -34,7 +34,7 @@ namespace DarkDescent
 			static Window::Config parse(const JS::Env& env, v8::Local<v8::Value> config, const char* defaultTitle);
 		};
 
-		Window(const JS::Env& env, std::size_t index, Config&& config);
+		Window(const JS::Env& env, std::size_t index, Config&& config, bool isGameWindow);
 		~Window();
 
 		void show();
@@ -50,7 +50,7 @@ namespace DarkDescent
 
 		inline v8::Local<v8::Value> jsObject() const { return jsWindow_.value(); };
 
-
+		inline bool isGameWindow() const noexcept { return isGameWindow_; }
 	private:
 		std::size_t index_;
 		SDL_Window* sdlWindow_;
@@ -64,6 +64,7 @@ namespace DarkDescent
 
 		bool isDestroyed_;
 		JS::Window jsWindow_;
+		bool isGameWindow_;
 
 		friend class Renderer;
 		friend class WindowManager;

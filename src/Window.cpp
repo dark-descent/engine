@@ -57,7 +57,7 @@ namespace DarkDescent
 		return config;
 	}
 
-	Window::Window(const JS::Env& env, std::size_t index, Window::Config&& config):
+	Window::Window(const JS::Env& env, std::size_t index, Window::Config&& config, bool isGameWindow):
 		index_(index),
 		sdlWindow_(SDL_CreateWindow(
 			config.title.c_str(),
@@ -73,7 +73,8 @@ namespace DarkDescent
 		isDestroyed_(false),
 		width_(config.width),
 		height_(config.height),
-		jsWindow_(env)
+		jsWindow_(env),
+		isGameWindow_(isGameWindow)
 	{
 		if (sdlWindow_ == nullptr)
 			throw TraceException("Could not create window!");

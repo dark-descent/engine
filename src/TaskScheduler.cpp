@@ -8,18 +8,18 @@ namespace DarkDescent
 	{
 		queue_.emplace(1024 * 8);
 		isRunning_.store(true, std::memory_order::release);
-		for(std::size_t i = 0; i < 4; i++)
-		{
-			workerThreads_.emplace_back([&]()
-			{
-				auto& queue = queue_.value();
-				while(isRunning_.load(std::memory_order::acquire))
-				{
-					if(!queue.isDone())
-						runNext(queue);
-				}
-			});
-		}
+		// for(std::size_t i = 0; i < 4; i++)
+		// {
+		// 	workerThreads_.emplace_back([&]()
+		// 	{
+		// 		auto& queue = queue_.value();
+		// 		while(isRunning_.load(std::memory_order::acquire))
+		// 		{
+		// 			if(!queue.isDone())
+		// 				runNext(queue);
+		// 		}
+		// 	});
+		// }
 	}
 
 	void TaskScheduler::onReady()
@@ -30,7 +30,7 @@ namespace DarkDescent
 	void TaskScheduler::onTerminate()
 	{
 		isRunning_.store(false, std::memory_order::release);
-		for(auto& thread : workerThreads_)
+		for (auto& thread : workerThreads_)
 			thread.join();
 	}
 
@@ -52,6 +52,7 @@ namespace DarkDescent
 			{
 				if (promise.tasksAwaiter_) [[likely]]
 				{
+					// puts("await tasks...");
 					const std::size_t count = promise.tasksAwaiter_->tasks_.size() - 1;
 					if (count > 0)
 						queue.addTaskCount(count);
@@ -74,21 +75,25 @@ namespace DarkDescent
 				{
 					if (parentPromise.tasksAwaiter_->doneCount_.fetch_sub(1, std::memory_order::acq_rel) - 1 == 0)
 					{
+						// puts("reschedule parent");
 						queue.push(promise.parentCoroutine_.address());
 					}
 					else
 					{
+						// puts("remove task count");
 						queue.removeTaskCount(1);
 					}
 				}
 				else
 				{
+					// puts("no task awaiter");
 					queue.push(promise.parentCoroutine_.address());
+					handle.destroy();
 				}
-				handle.destroy();
 			}
 			else
 			{
+				// puts("no task awaiter or parent");
 				queue.removeTaskCount(1);
 				handle.destroy();
 			}

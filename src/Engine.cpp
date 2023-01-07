@@ -167,7 +167,7 @@ namespace DarkDescent
 		assert(!game_.has_value());
 		JS::Game& game = game_.emplace(env);
 		game.reset(gameObject);
-		
+
 		v8::Local<v8::Value> configVal;
 
 		if (args.Length() == 2)
@@ -181,48 +181,80 @@ namespace DarkDescent
 
 		WindowManager& wm = *getSubSystem<WindowManager>();
 		v8::Local<v8::Value> windowConfig = JS::getFromObject(env, configVal, "window").FromMaybe(v8::Object::New(env.isolate()).As<v8::Value>());
-		Window& window = wm.getWindow(wm.createWindow(env, windowConfig));
+		Window& window = wm.getWindow(wm.createWindow(env, windowConfig, true));
 		game.setWindow(window.jsObject());
 		return game;
 	}
 
+	Task<bool> pumpSDLMessages(std::size_t frame, WindowManager& windowManager)
+	{
+		// printf("pumpSDLMessages() frame: %zu\n", frame);
+		co_return windowManager.pumpEvents();
+	}
+
 	Task<> updateInput(std::size_t frame)
 	{
-		// Logger::get().info("updateInput() frame: ", frame);
+		// printf("updateInput() frame: %zu\n", frame);
 		co_return;
 	}
 
 	Task<> updatePhysics(std::size_t frame)
 	{
-		// Logger::get().info("updatePhysics() frame: ", frame);
+		// printf("updatePhysics() frame: %zu\n", frame);
 		co_return;
 	}
 
 	Task<> render(std::size_t frame)
 	{
-		Logger::get().info("render() frame: ", frame);
+		// printf("render() frame: %zu\n", frame);
 		co_return;
 	}
 
 	bool secondLoopTaken = false;
+	bool loop = true;
 
-	Task<> gameLoop(TaskScheduler& scheduler, const std::size_t frame)
+	Task<> gameLoop(TaskScheduler& scheduler, WindowManager& windowManager, const std::size_t frame)
 	{
-		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(500ms);
-		co_await updateInput(frame);
-		co_await updatePhysics(frame);
-		co_await render(frame);
-		scheduler.schedule(gameLoop(scheduler, frame)); // reloop for this frame
+		// using namespace std::chrono_literals;
+		// // std::this_thread::sleep_for(500ms);
+
+		// const bool resume = co_await pumpSDLMessages(frame, windowManager);
+		// if (resume)
+		// {
+		// 	co_await updateInput(frame);
+		// 	co_await updatePhysics(frame);
+		// 	co_await render(frame);
+		// 	scheduler.schedule(gameLoop(scheduler, windowManager, frame)); // reloop for this frame
+		// }
+		// else
+		// {
+		// 	puts("stop :D");
+		// }
+		// co_await pumpSDLMessages(frame, windowManager);
+		if (co_await pumpSDLMessages(frame, windowManager))
+		{
+			// printf("pumpSDLMessages returned %s\n", loop ? "true" : "false");
+			co_await updateInput(frame);
+			co_await updatePhysics(frame);
+			co_await render(frame);
+			scheduler.schedule(gameLoop(scheduler, windowManager, frame + 1));
+		}
+		// Logger::get().info("loop() frame: ", frame, " done");
+		// if (frame == 0)
 	}
 
-	Task<> gameLoopSetup(TaskScheduler& scheduler)
+	Task<> gameLoopSetup(TaskScheduler& scheduler, WindowManager& windowManager)
 	{
-		co_await updateInput(0);
-		co_await updatePhysics(0);
-		scheduler.schedule(gameLoop(scheduler, 1));
-		co_await render(0);
-		scheduler.schedule(gameLoop(scheduler, 0));
+		// const bool resume = co_await pumpSDLMessages(0, windowManager);
+		// if (resume)
+		// {
+		// 	co_await updateInput(0);
+		// 	scheduler.schedule(gameLoop(scheduler, windowManager, 1));
+		// 	co_await updatePhysics(0);
+		// 	co_await render(0);
+		// 	scheduler.schedule(gameLoop(scheduler, windowManager, 0));
+		// }
+		co_return;
 	}
 
 	void Engine::run()
@@ -235,10 +267,10 @@ namespace DarkDescent
 			});
 
 			auto& scheduler = *getSubSystem<TaskScheduler>();
+			auto& windowManager = *getSubSystem<WindowManager>();
 
-			scheduler.schedule(gameLoopSetup(scheduler));
-
-			getSubSystem<WindowManager>()->enterEventLoop();
+			scheduler.schedule(gameLoop(scheduler, windowManager, 0));
+			scheduler.execute();
 		}
 	}
 }

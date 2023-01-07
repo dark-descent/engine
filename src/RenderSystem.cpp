@@ -37,7 +37,13 @@ namespace DarkDescent
 	void RenderSystem::onCreate(RenderSystem& system, const Event& event)
 	{
 		const std::size_t index = *static_cast<const std::size_t*>(event.data);
-		system.renderers_.emplace_at(index, &system.engine_.getSubSystem<WindowManager>()->getWindow(index));
+		auto& w = system.engine_.getSubSystem<WindowManager>()->getWindow(index);
+		auto renderer = system.renderers_.emplace_at(index, std::addressof(w));
+		if(w.isGameWindow())
+		{
+			assert(system.gameRenderer_ == nullptr);
+			system.gameRenderer_ = std::addressof(renderer);
+		}
 	}
 
 	void RenderSystem::onDestroy(RenderSystem& system, const Event& event)

@@ -18,13 +18,13 @@ namespace DarkDescent
 		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, void* data)
 		{
 			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
-			env.registerClass<JS::WindowClass>();
+		env.registerClass<JS::WindowClass>();
 		}, this);
 	}
 
 	void WindowManager::onReady()
 	{
-
+		isRunning_ = true;
 	}
 
 	void WindowManager::onTerminate()
@@ -57,53 +57,51 @@ namespace DarkDescent
 		return 0;
 	}
 
-	std::size_t WindowManager::createWindow(const JS::Env& env, v8::Local<v8::Value> config)
+	std::size_t WindowManager::createWindow(const JS::Env& env, v8::Local<v8::Value> config, bool isGameWindow)
 	{
 		std::size_t index = windows_.getNextIndex();
-		Window& w = windows_.emplace_back(env, index, Window::Config::parse(env, config, engine_.config().name.c_str()));
+		Window& w = windows_.emplace_back(env, index, Window::Config::parse(env, config, engine_.config().name.c_str()), isGameWindow);
 		idToIndexMap_.insert({ SDL_GetWindowID(w.sdlWindow_), index });
 		emitEvent(Hasher::hash("WINDOW_CREATED"), &index);
+		if (isGameWindow)
+		{
+			assert(gameWindow_ == nullptr);
+			gameWindow_ = std::addressof(w);
+		}
 		return index;
 	}
 
-	void WindowManager::enterEventLoop()
+	bool WindowManager::pumpEvents()
 	{
-		assert(!isRunning_);
-		isRunning_ = true;
 		SDL_Event e;
-		while (isRunning_)
+
+		while (SDL_PollEvent(&e))
 		{
-			SDL_WaitEventTimeout(&e, 15);
-
-			do
+			switch (e.type)
 			{
-				switch (e.type)
+				case SDL_QUIT:
 				{
-					case SDL_QUIT:
-					{
-						isRunning_ = false;
-					}
-					break;
-					case SDL_WINDOWEVENT:
-					{
-						switch (e.window.event)
-						{
-							case SDL_WINDOWEVENT_CLOSE:
-							{
-								// emitEvent(Hasher::hash("WINDOW_DESTROY"), std::addressof(windows_.at(e.window.windowID)));
-							}
-							break;
-						}
-					}
-					break;
+					isRunning_ = false;
 				}
-			} while (SDL_PollEvent(&e));
-
-			windows_.foreach([ & ](Window& window, std::size_t index)
-			{
-				if (!window.isDestroyed())
-					emitEvent(Hasher::hash("RENDER"), &index);
-			});
+				break;
+				case SDL_WINDOWEVENT:
+				{
+					switch (e.window.event)
+					{
+						case SDL_WINDOWEVENT_CLOSE:
+						{
+							// emitEvent(Hasher::hash("WINDOW_DESTROY"), std::addressof(windows_.at(e.window.windowID)));
+						}
+						break;
+					}
+				}
+				break;
+			}
 		}
+		if (!isRunning_)
+		{
+			puts("running_ set to false");
+		}
+		return isRunning_;
 	}
 }
