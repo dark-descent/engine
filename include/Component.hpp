@@ -10,23 +10,26 @@ namespace DarkDescent
 		std::size_t index;
 		std::size_t bitmask;
 	};
+
 	template<typename T>
 	struct Component
 	{
 	public:
 		Component() { }
 
-	protected:
 		static std::size_t index;
 		static std::size_t bitmask;
 		static bool isInitialized;
 
+	protected:
 		friend class ArchManager;
 		friend class Arch;
 		friend class GameObject;
 
 		template<class... T>
 		friend std::size_t getComponentsBitmask<T>();
+		template<class... T>
+		friend std::vector<std::size_t> getComponentsBitmasks<T>();
 	};
 
 	template <class... T>
@@ -39,6 +42,14 @@ namespace DarkDescent
 		return b;
 	}
 
+	template <class... T>
+	std::vector<std::size_t> getComponentsBitmasks()
+	{
+		return { (T::bitmask)... };
+	}
+
+	
+
 	template<typename T>
 	std::size_t Component<T>::index = 0;
 
@@ -47,7 +58,6 @@ namespace DarkDescent
 
 	template<typename T>
 	bool Component<T>::isInitialized = false;
-
 
 	template<typename T>
 	concept ExtendsComponent = std::is_base_of_v<Component<T>, T>;

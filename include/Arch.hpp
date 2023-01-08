@@ -2,6 +2,7 @@
 
 #include "pch.hpp"
 #include "ArchBufferPool.hpp"
+#include "TraceException.hpp"
 
 namespace DarkDescent
 {
@@ -62,7 +63,18 @@ namespace DarkDescent
 		const ComponentOffset& getComponentOffset(std::size_t bitmask) const;
 
 		template<typename Component>
-		const ComponentOffset& getComponentOffset() const { return getComponentOffset(Component::bitmask); }
+		const ComponentOffset& getComponentOffset() const
+		{
+			try
+			{
+				return getComponentOffset(Component::bitmask);
+			}
+			catch(const TraceException& e)
+			{
+				const std::string s = std::format("{} Check if Component {} is registered and used!", e.what(), typeid(Component).name());
+				throw TraceException(s.c_str());
+			}
+		}
 
 		inline ArchManager& archManager() const { return archManager_; } 
 

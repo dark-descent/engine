@@ -11,6 +11,7 @@ namespace DarkDescent
 	public:
 		Renderer(Window* window);
 
+		void renderSetup();
 		void render();
 
 	private:

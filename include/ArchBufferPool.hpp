@@ -14,7 +14,7 @@ namespace DarkDescent
 			char* data;
 
 			template<typename T>
-			T& get(const std::size_t offset) const noexcept
+			T& get(const std::size_t offset) const
 			{
 				return *reinterpret_cast<T*>(&data[offset]);
 			}
@@ -53,7 +53,7 @@ namespace DarkDescent
 
 		std::size_t getCount() const;
 
-		inline const std::vector<ArchBuffer*>& buffers() const noexcept { return buffers_; }
+		inline const std::vector<ArchBuffer*>& buffers() const { return buffers_; }
 
 	private:
 		void addBuffer();

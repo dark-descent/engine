@@ -201,7 +201,7 @@ namespace DarkDescent
 		{
 			Task<void> get_return_object() noexcept
 			{
-				return Task<void>(std::coroutine_handle<promise_type>::from_promise(*this));
+				return Task<>(std::coroutine_handle<promise_type>::from_promise(*this));
 			}
 		};
 

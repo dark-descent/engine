@@ -97,4 +97,14 @@ namespace DarkDescent::JS
 	{
 		val.As<v8::Object>()->SetInternalField(index, v8::External::New(env.isolate(), pointer));
 	}
+
+	v8::MaybeLocal<v8::Value> callConstructor(const Env& env, v8::Local<v8::Value> value, std::vector<v8::Local<v8::Value>>& args)
+	{
+		return value.As<v8::Function>()->CallAsConstructor(env.context(), static_cast<int>(args.size()), &args.at(0));
+	}
+
+	v8::MaybeLocal<v8::Value> callConstructor(const Env& env, v8::Local<v8::Value> value, std::vector<v8::Local<v8::Value>>&& args)
+	{
+		return value.As<v8::Function>()->CallAsConstructor(env.context(), static_cast<int>(args.size()), &args.at(0));
+	}
 }

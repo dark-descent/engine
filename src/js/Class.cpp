@@ -160,9 +160,9 @@ namespace DarkDescent::JS
 		return persistent_.Get(env.isolate());
 	}
 
-	v8::MaybeLocal<v8::Value> Class::instantiate(const std::vector<v8::Local<v8::Value>>& args) const
+	v8::MaybeLocal<v8::Value> Class::instantiate(std::vector<v8::Local<v8::Value>>& args) const
 	{
-		return getClass()->CallAsConstructor(env.context(), static_cast<int>(args.size()), const_cast<v8::Local<v8::Value>*>(args.data()));
+		return getClass()->CallAsConstructor(env.context(), static_cast<int>(args.size()), args.data());
 	}
 
 	v8::MaybeLocal<v8::Value> Class::instantiate(std::vector<v8::Local<v8::Value>>&& args) const

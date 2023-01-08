@@ -2,22 +2,28 @@
 #include "Transform.hpp"
 #include "ScriptManager.hpp"
 #include "js/Transform.hpp"
+#include "SpriteRenderer.hpp"
+#include "js/SpriteRenderer.hpp"
 
 namespace DarkDescent
 {
 	void ArchManager::onInitialize()
 	{
 		registerComponent<Transform>();
+		registerComponent<SpriteRenderer>();
+
 		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, void* data)
 		{
 			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
+
 			env.registerClass<JS::TransformClass>();
+			env.registerClass<JS::SpriteRendererClass>();
 		}, this);
 	}
 
 	void ArchManager::onReady()
 	{
-
+		
 	}
 
 	void ArchManager::onTerminate()

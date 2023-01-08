@@ -106,4 +106,7 @@ namespace DarkDescent::JS
 		}
 		return false;
 	}
+
+	v8::MaybeLocal<v8::Value> callConstructor(const Env& env, v8::Local<v8::Value> value, std::vector<v8::Local<v8::Value>>& args);
+	v8::MaybeLocal<v8::Value> callConstructor(const Env& env, v8::Local<v8::Value> value, std::vector<v8::Local<v8::Value>>&& args);
 }

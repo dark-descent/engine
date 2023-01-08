@@ -48,6 +48,7 @@ namespace DarkDescent
 		{
 			auto handle = std::coroutine_handle<TaskPromiseBase>::from_address(ptr);
 			auto& promise = handle.promise();
+
 			if (promise.resume())
 			{
 				if (promise.tasksAwaiter_) [[likely]]
@@ -67,6 +68,11 @@ namespace DarkDescent
 				{
 					puts("enqueue resuming task... [SHOULD NEVER HAPPEN!!]");
 				}
+			}
+			else if (promise.exception_.has_value())
+			{
+				std::rethrow_exception(promise.exception_.value());
+				// throw TraceException("Coroutine exception!");
 			}
 			else if (promise.parentCoroutine_)
 			{

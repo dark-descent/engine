@@ -61,7 +61,7 @@ namespace DarkDescent
 			JS::Env::Scope scope(env);
 			emitEvent(Events::ENV_DESTROYED, std::addressof(*envs_.at(env.index)));
 		}
-		
+
 		env.~Env();
 		envs_.erase_at(env.index);
 	}
@@ -69,12 +69,22 @@ namespace DarkDescent
 	bool ScriptManager::initializeGame()
 	{
 		logger.info("initializing game...");
-		
+
 		mainEnv().run([ & ](const JS::Env& env)
 		{
 			env.moduleLoader_.initialize(engine_.config().entry);
 		});
 
 		return engine_.game().has_value();
+	}
+
+	void ScriptManager::setCurrentScene(Scene* scene)
+	{
+		currentScene_ = scene;
+	}
+
+	Scene* ScriptManager::getCurrentScene()
+	{
+		return currentScene_;
 	}
 }

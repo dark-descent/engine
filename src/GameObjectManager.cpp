@@ -3,6 +3,7 @@
 #include "ArchManager.hpp"
 #include "js/GameObject.hpp"
 #include "ScriptManager.hpp"
+#include "Transform.hpp"
 
 namespace DarkDescent
 {
@@ -37,7 +38,7 @@ namespace DarkDescent
 	{
 		logger.debug("Create GameObject at mapIndex ", archMapIndex);
 		assert(archMapIndex <= 1);
-		Arch* arch = archManager_->rootArch(archMapIndex);
+		Arch* arch = archManager_->rootArch(archMapIndex)->getNext(archManager_->getComponent<Transform>()).arch;
 		Entity entity = arch->alloc();
 		GameObjectHandle* handle = arch->getGameObjectHandle(entity);
 		*handle = gameObjectsAllocators_.at(archMapIndex).emplace(arch, std::move(entity));

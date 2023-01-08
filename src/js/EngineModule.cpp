@@ -7,6 +7,9 @@
 #include "js/Game.hpp"
 #include "Logger.hpp"
 #include "js/EngineNamespace.hpp"
+#include "js/GameObject.hpp"
+#include "js/Transform.hpp"
+#include "js/SpriteRenderer.hpp"
 
 namespace DarkDescent::JS::EngineModule
 {
@@ -23,7 +26,10 @@ namespace DarkDescent::JS::EngineModule
 			JS::string(env, "default"),
 			JS::string(env, "Scene"),
 			JS::string(env, "SceneManager"),
-			JS::string(env, "Game")
+			JS::string(env, "Game"),
+			JS::string(env, "GameObject"),
+			JS::string(env, "Transform"),
+			JS::string(env, "SpriteRenderer")
 		};
 
 		v8::Local<v8::Module> module = v8::Module::CreateSyntheticModule(env.isolate(), JS::string(env, importName), exports, [](v8::Local<v8::Context> context, v8::Local<v8::Module> module) -> v8::MaybeLocal<v8::Value>
@@ -38,9 +44,11 @@ namespace DarkDescent::JS::EngineModule
 		};
 
 		exportValue("Scene", env.getJSClass<SceneClass>());
-		exportValue("Game", env.getJSClass<GameClass>());
-		// exportValue("Window", env.getJSClass<WindowClass>());
 		exportValue("SceneManager", SceneManager::create(env));
+		exportValue("Game", env.getJSClass<GameClass>());
+		exportValue("GameObject", env.getJSClass<GameObjectClass>());
+		exportValue("Transform", env.getJSClass<TransformClass>());
+		exportValue("SpriteRenderer", env.getJSClass<SpriteRendererClass>());
 
 		if (module->SetSyntheticModuleExport(env.isolate(), JS::string(env, "default"), JS::Engine::createNamespace(env)).IsNothing())
 		{

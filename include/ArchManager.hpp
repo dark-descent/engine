@@ -101,25 +101,45 @@ namespace DarkDescent
 
 		void swapActiveIndex();
 
-		template<class... T>
-		std::vector<Arch*> queryArches()
+		struct Query
 		{
-			return queryArches(getComponentsBitmask<T...>());
-		}
+			template<typename... T>
+			static Query create(Arch* arch, ArchBuffer* buffer)
+			{
+				return {
+					arch,
+					buffer
+				};
+			}
 
-		std::vector<Arch*> queryArches(const Bitmask bitmask)
+			template<typename T>
+			std::size_t getOffset() const
+			{
+				return arch->getComponentOffset<T>().offset;
+			}
+
+			Arch* arch;
+			ArchBuffer* buffer;
+		};
+
+		template<class... T>
+		std::vector<Query> getArchQueries()
 		{
-			std::vector<Arch*> arches;
+			const Bitmask bitmask = getComponentsBitmask<T...>();
+
+			std::vector<Query> queries;
 
 			for (auto& [key, arch] : activeArchMap())
 			{
 				if ((key & bitmask) == bitmask)
 				{
-					arches.emplace_back(std::addressof(arch));
+					auto archPtr = std::addressof(arch);
+					for(auto buffer : arch.bufferPool().buffers())
+						queries.emplace_back(Query::create<T...>(archPtr, buffer));
 				}
 			}
 
-			return arches;
+			return queries;
 		}
 
 	protected:

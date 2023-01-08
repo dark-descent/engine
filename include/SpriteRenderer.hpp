@@ -1,19 +1,28 @@
 #pragma once
 
 #include "Component.hpp"
+#include "pch.hpp"
 
 namespace DarkDescent
 {
-	struct SpriteRenderer : public Component<SpriteRenderer>
+	struct SpriteRenderer: public Component<SpriteRenderer>
 	{
-		SpriteRenderer(float x = 0.0f, float y = 0.0f) : Component(), x(x), y(y) {};
+		static const float vertices[9];
 
-		float x;
-		float y;
+		SpriteRenderer():
+			Component(),
+			vbo()
+		{
+			glGenBuffers(1, &vbo);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		}
 
 		std::string log()
 		{
-			return std::format("struct SpriteRenderer\n  x = {}\n  y = {}", x, y);
+			return std::format("struct SpriteRenderer");
 		}
+
+		std::uint32_t vbo;
 	};
 }

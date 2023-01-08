@@ -2,7 +2,7 @@ declare module "engine"
 {
 	export class GameObject
 	{
-		public constructor();
+		public constructor(name?: string);
 
 		public get transform(): Transform;
 

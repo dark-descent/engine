@@ -18,18 +18,12 @@ namespace DarkDescent
 		void addComponent(const ComponentInfo& component);
 		void addComponent(const std::size_t componentIndex);
 
-		template<ExtendsComponent T>
-		void addComponent()
-		{
-			addComponent(T::index);
-		}
-
 		template<ExtendsComponent T, typename... Args>
-		void addComponent(Args&&... args)
+		T* addComponent(Args&&... args)
 		{
 			addComponent(T::index);
 			T* ptr = getComponent<T>();
-			new (ptr) T(std::forward<Args>(args)...);
+			return new (ptr) T(std::forward<Args>(args)...);
 		}
 
 		void* getComponentRaw(const ComponentInfo& component) const;

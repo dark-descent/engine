@@ -9,6 +9,8 @@
 
 namespace DarkDescent
 {
+	class Scene;
+	
 	namespace JS
 	{
 		class Object;
@@ -55,11 +57,15 @@ namespace DarkDescent
 		const JS::Env& createEnv();
 		void destroyEnv(const JS::Env& env);
 
+		void setCurrentScene(Scene* scene);
+		Scene* getCurrentScene();
+
 		inline const JS::Env& mainEnv() const { return *envs_.at(0); }
 
 		bool initializeGame();
 
 	private:
 		PersistentVector<JS::Env*, 8> envs_;
+		Scene* currentScene_;
 	};
 }

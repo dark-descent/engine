@@ -116,7 +116,7 @@ namespace DarkDescent::JS
 		void initialize();
 		v8::Local<v8::Function> getClass() const;
 
-		v8::MaybeLocal<v8::Value> instantiate(const std::vector<v8::Local<v8::Value>>& args = {}) const;
+		v8::MaybeLocal<v8::Value> instantiate(std::vector<v8::Local<v8::Value>>& args) const;
 		v8::MaybeLocal<v8::Value> instantiate(std::vector<v8::Local<v8::Value>>&& args = {}) const;
 
 	protected:

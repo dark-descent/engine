@@ -2,6 +2,7 @@
 #include "Component.hpp"
 #include "ArchManager.hpp"
 #include "Logger.hpp"
+#include "TraceException.hpp"
 
 #ifndef ARCH_BUFFER_CAPACITY
 #define ARCH_BUFFER_CAPACITY 16
@@ -96,7 +97,7 @@ namespace DarkDescent
 				return offsets_[i];
 			}
 		}
-		throw false;
+		throw TraceException("Could not get component offset!");
 	}
 
 	const ArchArm& Arch::getNext(const ComponentInfo& component)

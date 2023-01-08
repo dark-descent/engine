@@ -4,6 +4,11 @@
 /// <reference path="./Game.d.ts" />
 /// <reference path="./Scene.d.ts" />
 /// <reference path="./SceneManager.d.ts" />
+/// <reference path="./GameObject.d.ts" />
+/// <reference path="./Component.d.ts" />
+/// <reference path="./Transform.d.ts" />
+/// <reference path="./Vector.d.ts" />
+/// <reference path="./SpriteRenderer.d.ts" />
 
 declare interface IEntry
 {
