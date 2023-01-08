@@ -89,6 +89,7 @@ namespace DarkDescent::JS
 		const ClassBuilder& setStaticMethod(const char* name, v8::FunctionCallback callback = ClassBuilder::emptyFunction, v8::Local<v8::Value> data = v8::Local<v8::Value>()) const;
 		const ClassBuilder& setStaticMethod(const char* name, v8::FunctionCallback callback, void* data) const;
 		const ClassBuilder& set(const char* key, v8::Local<v8::Value> val, bool readonly = false, bool isPrivate = false) const;
+		const ClassBuilder& setAccessors(const char* key, v8::Local<v8::FunctionTemplate> getter = v8::Local<v8::FunctionTemplate>(), v8::Local<v8::FunctionTemplate> setter = v8::Local<v8::FunctionTemplate>(), bool readonly = false) const;
 		const ClassBuilder& setMethod(const char* name, v8::FunctionCallback callback = ClassBuilder::emptyFunction, v8::Local<v8::Value> data = v8::Local<v8::Value>(), v8::PropertyAttribute attr = v8::PropertyAttribute::None) const;
 		const ClassBuilder& setMethod(const char* name, v8::FunctionCallback callback, void* data) const;
 		const ClassBuilder& setInternalFieldCount(const int count) const;

@@ -32,8 +32,8 @@ namespace DarkDescent
 		jsScene_.onUnload();
 	}
 
-	void Scene::spawn()
+	GameObject* Scene::spawn()
 	{
-		gameObjectManager_.create(archMapIndex_);
+		return gameObjectManager_.create(archMapIndex_);
 	}
 }

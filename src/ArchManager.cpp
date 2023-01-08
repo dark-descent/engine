@@ -1,10 +1,18 @@
 #include "ArchManager.hpp"
+#include "Transform.hpp"
+#include "ScriptManager.hpp"
+#include "js/Transform.hpp"
 
 namespace DarkDescent
 {
 	void ArchManager::onInitialize()
 	{
-
+		registerComponent<Transform>();
+		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, void* data)
+		{
+			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
+			env.registerClass<JS::TransformClass>();
+		}, this);
 	}
 
 	void ArchManager::onReady()

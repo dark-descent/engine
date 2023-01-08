@@ -65,7 +65,7 @@ namespace DarkDescent
 			SDL_WINDOWPOS_CENTERED,
 			config.width,
 			config.height,
-			(config.initialHidden ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN) | (config.resizable ? SDL_WINDOW_RESIZABLE : 0) | SDL_WINDOW_OPENGL
+			(config.initialHidden ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN) | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
 		)),
 		screenSurface_(SDL_GetWindowSurface(sdlWindow_)),
 		isInitiallyShown_(false),

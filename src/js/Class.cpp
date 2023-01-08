@@ -91,6 +91,12 @@ namespace DarkDescent::JS
 		return *this;
 	}
 
+	const ClassBuilder& ClassBuilder::setAccessors(const char* key, v8::Local<v8::FunctionTemplate> getter, v8::Local<v8::FunctionTemplate> setter, bool readonly) const
+	{
+		template_->SetAccessorProperty(JS::string(env_, key), getter, setter, readonly ? v8::PropertyAttribute::ReadOnly : v8::PropertyAttribute::None);
+		return *this;
+	}
+
 	const ClassBuilder& ClassBuilder::setMethod(const char* name, v8::FunctionCallback callback, v8::Local<v8::Value> data, v8::PropertyAttribute attr) const
 	{
 		if (data.IsEmpty())

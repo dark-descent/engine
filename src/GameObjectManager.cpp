@@ -1,12 +1,20 @@
 #include "GameObjectManager.hpp"
 #include "Engine.hpp"
 #include "ArchManager.hpp"
+#include "js/GameObject.hpp"
+#include "ScriptManager.hpp"
 
 namespace DarkDescent
 {
 	void GameObjectManager::onInitialize()
 	{
 		archManager_ = engine_.getSubSystem<ArchManager>();
+
+		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, void* data)
+		{
+			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
+			env.registerClass<JS::GameObjectClass>();
+		}, this);
 	}
 
 	void GameObjectManager::onReady()

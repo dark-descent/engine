@@ -18,7 +18,7 @@ namespace DarkDescent
 		addEventHandler(ScriptManager::Events::ENV_CREATED, [](SubSystem* self, const Event& e, void* data)
 		{
 			const JS::Env& env = *static_cast<const JS::Env*>(e.data);
-		env.registerClass<JS::WindowClass>();
+			env.registerClass<JS::WindowClass>();
 		}, this);
 	}
 

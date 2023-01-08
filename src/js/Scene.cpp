@@ -4,6 +4,8 @@
 #include "Engine.hpp"
 #include "SceneManager.hpp"
 #include "Logger.hpp"
+#include "GameObject.hpp"
+#include "js/GameObject.hpp"
 
 namespace DarkDescent::JS
 {
@@ -46,7 +48,9 @@ namespace DarkDescent::JS
 	JS_CLASS_METHOD_IMPL(SceneClass::spawn)
 	{
 		DarkDescent::Scene* scene = JS::getInternalPointer<DarkDescent::Scene>(args);
-		scene->spawn();
+		DarkDescent::GameObject* obj = scene->spawn();
+		auto jsObj = env.getClass<JS::GameObjectClass>().instantiate({ v8::External::New(env.isolate(), obj) }).ToLocalChecked();
+		args.GetReturnValue().Set(jsObj);
 	}
 
 	JS_CREATE_CLASS(SceneClass)

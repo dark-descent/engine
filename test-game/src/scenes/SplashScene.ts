@@ -1,16 +1,18 @@
 import { Scene } from "engine";
+import { range } from "../Range";
 
 export class SplashScene extends Scene
 {
 	public onLoad()
 	{
 		console.log(`Scene ${this.name} loading`);
+		
+		const objects = [];
 
-		this.spawn();
-		this.spawn();
-		this.spawn();
-		this.spawn();
-		this.spawn();
+		for(const i of range(0, 10))
+			objects.push(this.spawn());
+	
+		console.log(objects);
 	}
 
 	public onUnload()
