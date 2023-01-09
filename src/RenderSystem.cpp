@@ -43,7 +43,7 @@ namespace DarkDescent
 	{
 		const std::size_t index = *static_cast<const std::size_t*>(event.data);
 		auto& w = system.engine_.getSubSystem<WindowManager>()->getWindow(index);
-		auto renderer = system.renderers_.emplace_back(new Renderer(std::addressof(w)));
+		auto renderer = system.renderers_.emplace_back(new Renderer(system, std::addressof(w)));
 		if (w.isGameWindow())
 		{
 			assert(system.gameRenderer_ == nullptr);
@@ -68,18 +68,19 @@ namespace DarkDescent
 			glBindBuffer(GL_ARRAY_BUFFER, spriteRenderer.vbo);
 
 			glVertexAttribPointer(
-				0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,                  // stride
-				(void*)0            // array buffer offset
+				0,			// attribute must match shader layout
+				3,			// size
+				GL_FLOAT,	// type
+				GL_FALSE,	// normalized?
+				0,			// stride
+				(void*)0 	// array buffer offset
 			);
 
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			glDrawArrays(GL_TRIANGLES, 0, 18);
 		});
 
 		glDisableVertexAttribArray(0);
+
 		co_return;
 	}
 

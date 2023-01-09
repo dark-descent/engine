@@ -5,11 +5,13 @@
 #include "js/Helpers.hpp"
 #include "js/Console.hpp"
 #include "ResourceManager.hpp"
-#include "Script.hpp"
 #include "js/EngineModule.hpp"
+#include "TextResource.hpp"
 
 namespace DarkDescent::JS
 {
+	using Script = TextResource;
+
 	ModuleLoader::ModuleLoader(const Env& env, ResourceManager& resourceManager):
 		env(env),
 		resourceManager_(resourceManager),
@@ -164,10 +166,9 @@ namespace DarkDescent::JS
 		
 		env.logger.info("Load module ", p, fileName);
 
-		std::ifstream is(path);
 		std::string codePrefix = std::format("const __dirname = \"{}\"; const __filename = \"{}\";", p.c_str(), fileName.c_str());
 		std::string pathStr = path.string();
-		std::string code = resourceManager_.loadResourceImmediate<Script>(pathStr, pathStr).data();
+		std::string code = resourceManager_.loadResourceImmediate<Script>(pathStr).data();
 		return instantiateModule(path.string(), codePrefix + code);
 	}
 

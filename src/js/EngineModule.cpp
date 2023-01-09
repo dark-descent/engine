@@ -10,6 +10,7 @@
 #include "js/GameObject.hpp"
 #include "js/Transform.hpp"
 #include "js/SpriteRenderer.hpp"
+#include "js/Renderer.hpp"
 
 namespace DarkDescent::JS::EngineModule
 {
@@ -29,34 +30,37 @@ namespace DarkDescent::JS::EngineModule
 			JS::string(env, "Game"),
 			JS::string(env, "GameObject"),
 			JS::string(env, "Transform"),
-			JS::string(env, "SpriteRenderer")
+			JS::string(env, "SpriteRenderer"),
+			JS::string(env, "Renderer")
 		};
 
 		v8::Local<v8::Module> module = v8::Module::CreateSyntheticModule(env.isolate(), JS::string(env, importName), exports, [](v8::Local<v8::Context> context, v8::Local<v8::Module> module) -> v8::MaybeLocal<v8::Value>
 		{
 			const Env& env = Env::fromContext(context);
 
-		auto isolate = context->GetIsolate();
+			auto isolate = context->GetIsolate();
 
-		auto exportValue = [ & ](const char* name, v8::Local<v8::Value> val)
-		{
-			module->SetSyntheticModuleExport(env.isolate(), JS::string(env, name), val);
-		};
+			auto exportValue = [ & ](const char* name, v8::Local<v8::Value> val)
+			{
+				module->SetSyntheticModuleExport(env.isolate(), JS::string(env, name), val);
+			};
 
-		exportValue("Scene", env.getJSClass<SceneClass>());
-		exportValue("SceneManager", SceneManager::create(env));
-		exportValue("Game", env.getJSClass<GameClass>());
-		exportValue("GameObject", env.getJSClass<GameObjectClass>());
-		exportValue("Transform", env.getJSClass<TransformClass>());
-		exportValue("SpriteRenderer", env.getJSClass<SpriteRendererClass>());
+			exportValue("Scene", env.getJSClass<SceneClass>());
+			exportValue("SceneManager", SceneManager::create(env));
+			exportValue("Game", env.getJSClass<GameClass>());
+			exportValue("GameObject", env.getJSClass<GameObjectClass>());
+			exportValue("Transform", env.getJSClass<TransformClass>());
+			exportValue("SpriteRenderer", env.getJSClass<SpriteRendererClass>());
+			auto o = JS::Renderer::createNamespace(env);
+			exportValue("Renderer", o);
 
-		if (module->SetSyntheticModuleExport(env.isolate(), JS::string(env, "default"), JS::Engine::createNamespace(env)).IsNothing())
-		{
-			Logger::get().error("Could not create default export for module \"", importName, "\"!");
-			return v8::MaybeLocal<v8::Value>(False(isolate));
-		}
+			if (module->SetSyntheticModuleExport(env.isolate(), JS::string(env, "default"), JS::Engine::createNamespace(env)).IsNothing())
+			{
+				Logger::get().error("Could not create default export for module \"", importName, "\"!");
+				return v8::MaybeLocal<v8::Value>(False(isolate));
+			}
 
-		return v8::MaybeLocal<v8::Value>(v8::True(isolate));
+			return v8::MaybeLocal<v8::Value>(v8::True(isolate));
 		});
 
 		v8::Maybe<bool> result = module->InstantiateModule(env.context(), ModuleLoader::importModule);

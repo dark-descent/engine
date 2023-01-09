@@ -76,6 +76,12 @@ namespace DarkDescent::JS
 		return static_cast<T*>(args.This()->GetInternalField(i).As<v8::External>()->Value());
 	}
 
+	template<typename T>
+	T* getInternalPointer(const v8::Local<v8::Value> &obj, uint32_t i = 0)
+	{
+		return static_cast<T*>(obj.As<v8::Object>()->GetInternalField(i).As<v8::External>()->Value());
+	}
+
 	void setInternalPointer(const v8::FunctionCallbackInfo<v8::Value> &args, void* pointer, uint32_t index = 0);
 	void setInternalPointer(const Env& env, v8::Local<v8::Value> val, void* pointer, uint32_t index = 0);
 

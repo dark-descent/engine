@@ -1,8 +1,10 @@
-import { Scene, GameObject, Transform, SpriteRenderer } from "engine";
+import { Scene, GameObject, Transform, SpriteRenderer, Renderer } from "engine";
 import { range } from "../Range";
 export class SplashScene extends Scene {
     onLoad() {
         console.log(`Scene ${this.name} loading`);
+        const material = Renderer.createMaterial("test");
+        Renderer.setDefaultMaterial(material);
         const objects = [];
         for (const _ of range(0, 10))
             objects.push(new GameObject());

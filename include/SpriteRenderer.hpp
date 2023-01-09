@@ -7,7 +7,7 @@ namespace DarkDescent
 {
 	struct SpriteRenderer: public Component<SpriteRenderer>
 	{
-		static const float vertices[9];
+		static const float vertices[18];
 
 		SpriteRenderer():
 			Component(),

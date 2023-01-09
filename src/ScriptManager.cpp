@@ -2,7 +2,6 @@
 #include "Engine.hpp"
 #include "TraceException.hpp"
 #include "ResourceManager.hpp"
-#include "Script.hpp"
 
 namespace DarkDescent
 {
@@ -32,7 +31,6 @@ namespace DarkDescent
 
 	void ScriptManager::onReady()
 	{
-		engine_.getSubSystem<ResourceManager>()->registerResourceType<Script, const char*>();
 		createEnv();
 	}
 

@@ -27,58 +27,75 @@ namespace DarkDescent
 			resourceMaps_.emplace_back();
 		}
 
-		template<IsResource T, typename... Args>
-		void registerResource(std::unordered_map<Hash, IResource*>& map, Hash hash, const char* path, Args&&... args)
+		template<IsResource T>
+		void registerResource(const char* path)
 		{
+			const Hash hash = Hasher::hash(path);
+			std::unordered_map<Hash, IResource*>& map = resourceMaps_.at(T::index());
 			if (!map.contains(hash))
-				map.emplace(hash, static_cast<IResource*>(new T(std::forward<Args>(args)...)));
+			{
+				map.emplace(hash, new T(path));
+			}
 		}
 
-		template<IsResource T, typename... Args>
-		void registerResource(Hash hash, const char* path, Args&&... args)
+		template<IsResource T>
+		void registerResource(const std::string& path)
 		{
+			registerResource(path.c_str());
+		}
+
+		template<IsResource T>
+		T& loadResource(const char* path)
+		{
+			const Hash hash = Hasher::hash(path);
 			std::unordered_map<Hash, IResource*>& map = resourceMaps_.at(T::index());
-			registerResource<T, Args...>(map, hash, path, std::forward<Args>(args)...);
+
+			if (!map.contains(hash))
+			{
+				auto resource = new T(path);
+				map.emplace(hash, resource);
+				pendingResources_.emplace_back(resource);
+				return *resource;
+			}
+			else
+			{
+				T& resource = getResource<T>(path);
+				pendingResources_.emplace_back(std::addressof(resource));
+				return resource;
+			}
 		}
 
-		template<IsResource T, typename... Args>
-		void registerResource(const char* path, Args&&... args)
+		template<IsResource T>
+		T& loadResource(const std::string& path)
 		{
-			registerResource<T, Args...>(Hasher::hash(path), path, std::forward<Args>(args)...);
+			return loadResource<T>(path.c_str());
 		}
 
-		template<IsResource T, typename... Args>
-		void registerResource(const std::string& path, Args&&... args)
-		{
-			std::unordered_map<Hash, IResource*>& map = resourceMaps_.at(T::index());
-			registerResource<T, Args...>(map, Hasher::hash(path.c_str()), path.c_str(), std::forward<Args>(args)...);
-		}
-
-		template<IsResource T, typename... Args>
-		T& loadResourceImmediate(const char* path, Args&&... args)
+		template<IsResource T>
+		T& loadResourceImmediate(const char* path)
 		{
 			Hash hash = Hasher::hash(path);
 
 			std::unordered_map<Hash, IResource*>& map = resourceMaps_.at(T::index());
 
 			if (!map.contains(hash))
-				registerResource<T, Args...>(path, std::forward<Args>(args)...);
+				registerResource<T>(path);
 
 			auto& r = getResource<T>(path);
 			r.load();
 			return r;
 		}
 
-		template<IsResource T, typename... Args>
-		T& loadResourceImmediate(const std::string& path, Args&&... args)
+		template<IsResource T>
+		T& loadResourceImmediate(const std::string& path)
 		{
-			return loadResourceImmediate<T, Args...>(path.c_str(), std::forward<Args>(args)...);
+			return loadResourceImmediate<T>(path.c_str());
 		}
 
 		template<IsResource T>
-		T& getResource(const char* path)
+		T& getResource(const std::string& path)
 		{
-			Hash hash = Hasher::hash(path);
+			Hash hash = Hasher::hash(path.c_str());
 
 			std::unordered_map<Hash, IResource*>& map = resourceMaps_.at(T::index());
 
@@ -86,18 +103,6 @@ namespace DarkDescent
 				throw TraceException("Could not find resource! (maybe not registered?)");
 
 			return *static_cast<T*>(map.at(hash));
-		}
-
-		template<IsResource T>
-		T& getResource(const std::string& path)
-		{
-			return getResource<T>(path.c_str());
-		}
-
-		template<IsResource T>
-		T& getResource(const std::filesystem::path& path)
-		{
-			return getResource<T>(path.string().c_str());
 		}
 
 		void loadResources();

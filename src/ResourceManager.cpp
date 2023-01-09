@@ -1,10 +1,11 @@
 #include "ResourceManager.hpp"
+#include "TextResource.hpp"
 
 namespace DarkDescent
 {
 	void ResourceManager::onInitialize()
 	{
-		
+		registerResourceType<TextResource, std::string>();
 	}
 
 	void ResourceManager::onReady()

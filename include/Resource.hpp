@@ -43,11 +43,12 @@ namespace DarkDescent
 		explicit Resource(const std::string& path) : IResource(path) {};
 		virtual ~Resource() {};
 
-		virtual void onLoad() = 0;
-
 		inline char* raw() const { return static_cast<char*>(IResource::data()); }
 		inline Data& data() const { return *static_cast<Data*>(IResource::data()); }
-
+	
+	protected:
+		virtual void onLoad() = 0;
+		
 		friend class ResourceManager;
 	};
 

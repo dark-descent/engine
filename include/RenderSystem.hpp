@@ -11,7 +11,7 @@ namespace DarkDescent
 	class ArchManager;
 	class TaskScheduler;
 	class ArchBuffer;
-	
+
 	class RenderSystem: public SubSystem
 	{
 		SUB_SYSTEM_CTORS(RenderSystem),
@@ -26,6 +26,9 @@ namespace DarkDescent
 		using EventCallback = void(*)(RenderSystem&, const Event&);
 
 		void handleEvent(Hash hash, EventCallback callback);
+	
+	public:
+		Renderer* gameRenderer() const noexcept { return gameRenderer_; }
 
 	private:
 		static void onCreate(RenderSystem& system, const Event& event);

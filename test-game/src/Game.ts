@@ -1,4 +1,4 @@
-import { Game, IGameConfig, SceneManager, WindowState } from "engine";
+import { Game, IGameConfig, Renderer, SceneManager, WindowState } from "engine";
 import { TestScene } from "./scenes/TestScene";
 import { SplashScene } from "./scenes/SplashScene";
 
@@ -21,9 +21,13 @@ export class TestGame extends Game<[readonly string[]]>
 	{
 		console.log("Game loading...");
 
+		Renderer.registerShader("test", "resources/shaders/default.vertex.glsl", "resources/shaders/default.fragment.glsl");
+
 		// Register all scenes
 		SceneManager.registerScene("splash_scene", SplashScene);
 		SceneManager.registerScene("test", TestScene);
+
+
 
 		// load the start scene 
 		SceneManager.loadScene("splash_scene");

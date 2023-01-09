@@ -86,9 +86,14 @@ namespace DarkDescent
 		{
 			addEventHandler(static_cast<Hash>(event), eventHandler, data);
 		}
+		
+	public:
+		inline const Engine& engine() { return engine_; }
 
 	protected:
 		const std::string name;
+
+	public:
 		const Logger logger;
 
 	protected:

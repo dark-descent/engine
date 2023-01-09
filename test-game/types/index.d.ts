@@ -9,6 +9,8 @@
 /// <reference path="./Transform.d.ts" />
 /// <reference path="./Vector.d.ts" />
 /// <reference path="./SpriteRenderer.d.ts" />
+/// <reference path="./Renderer.d.ts" />
+/// <reference path="./Material.d.ts" />
 
 declare interface IEntry
 {

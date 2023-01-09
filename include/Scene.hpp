@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pch.hpp"
-#include "Resource.hpp"
 #include "js/Scene.hpp"
 
 namespace DarkDescent
